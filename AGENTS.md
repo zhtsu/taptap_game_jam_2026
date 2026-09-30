@@ -165,6 +165,13 @@ pwsh scripts/verify-engine.ps1 -NoBaseline                               # 只�
 - `var_to_bytes()` 在本版本只接受 **1 个参数**（没有 `full_objects`）。
 - `OptionButton.select()` **不会**触发 `item_selected`（只有用户交互会）→ 填充下拉框不会误触发存档回调。
 - 脚本运行时报错会**中断所在函数**（后续代码整段不执行）。
+- **遮蔽内置标识符（`SHADOWED_GLOBAL_IDENTIFIER`）与 int→枚举（`INT_AS_ENUM_WITHOUT_CAST`）这两类
+  告警只在编辑器导入 / 脚本重载时出现，headless 冒烟（`--quit-after N`）看不到** → 验证这类修复必须走
+  `--editor --quit`，别拿默认冒烟当判据（详见 `ENGINEERING_NOTES.md` 001 / 005）。
+- **`var_to_bytes()` / `bytes_to_var()` 不保存枚举类型**：写进去是 `Key`，读回来一定是 `int`
+  （`typeof` = `TYPE_INT`）。所以存档里的枚举值赋给枚举类型属性时**必须显式转型**（`keycode as Key`）。
+- `InputEventKey.physical_keycode` 的静态类型是 `Key`；本项目 `project.godot` 的出厂绑定只填 `keycode`、
+  `physical_keycode` 是 **0** —— 断言"恢复默认按键"时要连 `keycode` 一起比，只比物理键码会误判。
 - `$长/节点/路径` 改名后要运行时才报错 → 用 `%唯一名`、`@export`，或在 `.tscn` 里用
   `[connection signal="pressed" from="..." to="." method="..."]` 连信号（本项目主菜单/暂停/制作人员都是这么连的）。
 - 全局类缓存、`.po` 翻译、`.uid` 都参与 `--import` 流程；手改 `.tscn` 的 `ext_resource` 时不要漏 `uid`。
@@ -191,3 +198,13 @@ pwsh scripts/verify-engine.ps1 -NoBaseline                               # 只�
 - `[input]` 动作表目前只有 `pause`（ESC）。要让玩家改移动 / 跳跃等玩法动作：先在 `project.godot` 的
   `[input]` 里加动作，再把动作加进 `OptionsData.REMAPPABLE_ACTIONS`（界面会自动多出一行）。
 - 存量静态 warn 已清零（`godot-lint.ps1` 报 `error=0 warn=0`）。
+
+## 工程笔记（改完代码 MUST 登记）
+
+`ENGINEERING_NOTES.md`（仓库根）：记录**初级错误**（语言/引擎层面的坑）与**设计架构问题**，
+每条都标注*是否回流项目模板*及回流做法 —— 逐条攒着，别每次从零重踩。
+
+- 修掉一个坑、或发现一个架构问题之后，**MUST** 在它的「索引」表加一行、在「条目」里补一节
+  （模板见文件开头），字段按那里的模板填全；
+- 「是否回流模板」**MUST** 二选一填死（`是` / `否`），空着等于没记录；
+- 改动**没有经过运行时验证**时，状态不许写「已修」。

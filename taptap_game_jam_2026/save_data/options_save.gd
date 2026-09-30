@@ -55,11 +55,12 @@ func validate() -> void:
 func _snap_volume_to_step(value: float, field: String) -> float:
 	var clamped: float = clampf(value, 0.0, 1.0)
 	var step: int = OptionsData.volume_to_step(clamped)
-	var snapped: float = OptionsData.step_to_volume(step)
-	if not is_equal_approx(snapped, clamped):
+	# 变量别叫 snapped：那是内置函数名，会触发 SHADOWED_GLOBAL_IDENTIFIER
+	var snapped_volume: float = OptionsData.step_to_volume(step)
+	if not is_equal_approx(snapped_volume, clamped):
 		push_warning("[OptionsSave] 音量字段 '%s' 的值 %.3f 不是候选档位，已吸附到 %d 档（%.2f）"
-			% [field, value, step, snapped])
-	return snapped
+			% [field, value, step, snapped_volume])
+	return snapped_volume
 
 
 func _is_supported_language(locale: String) -> bool:

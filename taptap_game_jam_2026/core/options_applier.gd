@@ -71,8 +71,11 @@ static func _apply_input_bindings(bindings: Dictionary) -> void:
 
 		InputMap.action_erase_events(action)
 		var event: InputEventKey = InputEventKey.new()
-		# 用物理键码：同一个物理键在不同键盘布局下位置一致，玩家按的还是那个键
-		event.physical_keycode = keycode
+		# 用物理键码：同一个物理键在不同键盘布局下位置一致，玩家按的还是那个键。
+		# `as Key` 不能省：physical_keycode 的静态类型是 Key 枚举，而存档里取出来的是 int
+		# （var_to_bytes 只存变体类型、不存枚举，读回来必然是 int），
+		# 不转型会报 INT_AS_ENUM_WITHOUT_CAST。
+		event.physical_keycode = keycode as Key
 		InputMap.action_add_event(action, event)
 
 
