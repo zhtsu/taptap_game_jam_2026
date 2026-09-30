@@ -1,0 +1,79 @@
+msgid ""
+msgstr ""
+"Project-Id-Version: \n"
+"POT-Creation-Date: \n"
+"PO-Revision-Date: \n"
+"Last-Translator: Automatically generated\n"
+"Language-Team: none\n"
+"Language: en\n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=UTF-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+"Plural-Forms: nplurals=2; plural=(n != 1);\n"
+"X-Generator: Poedit 3.9\n"
+
+msgid "ui.main_menu.title"
+msgstr "Godot Template"
+
+msgid "ui.main_menu.start"
+msgstr "Start"
+
+msgid "ui.main_menu.options"
+msgstr "Options"
+
+msgid "ui.main_menu.credits"
+msgstr "Credits"
+
+msgid "ui.main_menu.quit_game"
+msgstr "Quit game"
+
+msgid "ui.options.resolution"
+msgstr "Resolution"
+
+msgid "ui.options.fullscreen"
+msgstr "Fullscreen"
+
+msgid "ui.options.language"
+msgstr "Language"
+
+msgid "ui.pause.title"
+msgstr "Paused"
+
+msgid "ui.pause.resume"
+msgstr "Resume"
+
+msgid "ui.pause.return_to_title"
+msgstr "Return to title"
+
+msgid "ui.credits.title"
+msgstr "Credits"
+
+msgid "ui.credits.body"
+msgstr "Skeleton and conventions come from the godot-template project."
+
+msgid "ui.credits.back"
+msgstr "Back"
+
+msgid "ui.game.hint"
+msgstr "Example level - press ESC to pause"
+
+msgid "ui.options.master_volume"
+msgstr "Master volume"
+
+msgid "ui.options.music_volume"
+msgstr "Music volume"
+
+msgid "ui.options.sfx_volume"
+msgstr "Sound volume"
+
+msgid "ui.options.pause_key"
+msgstr "Pause key"
+
+msgid "ui.options.reset_key"
+msgstr "Reset"
+
+msgid "ui.options.waiting_key"
+msgstr "Press a key..."
+
+msgid "ui.options.back"
+msgstr "Back"

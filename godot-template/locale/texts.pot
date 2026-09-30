@@ -1,0 +1,65 @@
+msgid "ui.main_menu.title"
+msgstr ""
+
+msgid "ui.main_menu.start"
+msgstr ""
+
+msgid "ui.main_menu.options"
+msgstr ""
+
+msgid "ui.main_menu.credits"
+msgstr ""
+
+msgid "ui.main_menu.quit_game"
+msgstr ""
+
+msgid "ui.options.resolution"
+msgstr ""
+
+msgid "ui.options.fullscreen"
+msgstr ""
+
+msgid "ui.options.language"
+msgstr ""
+
+msgid "ui.pause.title"
+msgstr ""
+
+msgid "ui.pause.resume"
+msgstr ""
+
+msgid "ui.pause.return_to_title"
+msgstr ""
+
+msgid "ui.credits.title"
+msgstr ""
+
+msgid "ui.credits.body"
+msgstr ""
+
+msgid "ui.credits.back"
+msgstr ""
+
+msgid "ui.game.hint"
+msgstr ""
+
+msgid "ui.options.master_volume"
+msgstr ""
+
+msgid "ui.options.music_volume"
+msgstr ""
+
+msgid "ui.options.sfx_volume"
+msgstr ""
+
+msgid "ui.options.pause_key"
+msgstr ""
+
+msgid "ui.options.reset_key"
+msgstr ""
+
+msgid "ui.options.waiting_key"
+msgstr ""
+
+msgid "ui.options.back"
+msgstr ""

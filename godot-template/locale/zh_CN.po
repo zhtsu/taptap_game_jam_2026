@@ -1,0 +1,78 @@
+msgid ""
+msgstr ""
+"Project-Id-Version: \n"
+"POT-Creation-Date: \n"
+"PO-Revision-Date: \n"
+"Last-Translator: Automatically generated\n"
+"Language-Team: none\n"
+"Language: zh_CN\n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=UTF-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+"X-Generator: Poedit 3.9\n"
+
+msgid "ui.main_menu.title"
+msgstr "戈多游戏模板"
+
+msgid "ui.main_menu.start"
+msgstr "开始"
+
+msgid "ui.main_menu.options"
+msgstr "设置"
+
+msgid "ui.main_menu.credits"
+msgstr "制作人员"
+
+msgid "ui.main_menu.quit_game"
+msgstr "退出游戏"
+
+msgid "ui.options.resolution"
+msgstr "分辨率"
+
+msgid "ui.options.fullscreen"
+msgstr "全屏"
+
+msgid "ui.options.language"
+msgstr "语言"
+
+msgid "ui.pause.title"
+msgstr "已暂停"
+
+msgid "ui.pause.resume"
+msgstr "继续"
+
+msgid "ui.pause.return_to_title"
+msgstr "返回标题"
+
+msgid "ui.credits.title"
+msgstr "制作人员"
+
+msgid "ui.credits.body"
+msgstr "骨架与约定来自 godot-template 项目。"
+
+msgid "ui.credits.back"
+msgstr "返回"
+
+msgid "ui.game.hint"
+msgstr "示例关卡 —— 按 ESC 暂停"
+
+msgid "ui.options.master_volume"
+msgstr "主音量"
+
+msgid "ui.options.music_volume"
+msgstr "音乐音量"
+
+msgid "ui.options.sfx_volume"
+msgstr "音效音量"
+
+msgid "ui.options.pause_key"
+msgstr "暂停键"
+
+msgid "ui.options.reset_key"
+msgstr "恢复默认"
+
+msgid "ui.options.waiting_key"
+msgstr "请按键…"
+
+msgid "ui.options.back"
+msgstr "返回"
