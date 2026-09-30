@@ -168,7 +168,7 @@ pwsh scripts/verify-engine.ps1 -Project 'C:\repos\taptap_game_jam_2026\taptap_ga
 
 **验证**：
 
-- 删除前：`git status --short` 可见该文件与 `.uid` 均未被忽略；`godot-lint.ps1` 的 `temp_files` 规则命中。
+- 删除前：该文件与配套 `.uid` 都实实在在躺在工程目录里（未被任何忽略规则覆盖）；`godot-lint.ps1` 的 `temp_files` 规则命中。
 - 删除后：`godot-lint.ps1` 报 **`error=0  warn=0`**（与 `AGENTS.md` 里"存量 warn 已清零"一致）；
   `verify-engine.ps1 -Project ... -Scenario res://entry/main.tscn` 退出码 0、**无新增 ERROR/WARNING**；
   `--headless --editor --quit` 无任何脚本类告警（顺带确认它没给别人留下编译期引用）。
@@ -176,12 +176,12 @@ pwsh scripts/verify-engine.ps1 -Project 'C:\repos\taptap_game_jam_2026\taptap_ga
 **教训 / 回流做法**：
 
 - 回流模板：**让规则自己兜底**，别指望收尾时记得住 ——
-  1. 在工程 `project.godot` 同级的 `.gitignore` 里忽略 `_*` 探针（`_probe*` / `_*_probe*`）与
-     配套的 `.uid`，让残留**不会进提交**；
+  1. 在工程根加忽略规则，覆盖 `_*` 探针（`_probe*` / `_*_probe*`）与配套的 `.uid`，
+     让残留**不会进版本库**；
   2. 把 `temp_files` 从 warn 提升为 **error**（探针是"用完即弃"的东西，残留即失败），
      或在 `verify-engine.ps1` 结尾扫一遍 `_*` 并让退出码非 0；
-  3. `AGENTS.md` 里把「探针约定」从"记得删"改成"**探针一律放 `user://` 或 `.godot/` 之外**"——
-     例如统一放到 `res://.probe/`（整个目录 gitignore），用完连同目录一起删，不会有半删状态。
+  3. `AGENTS.md` 里把「探针约定」从"记得删"改成"**探针一律放工程外**"——
+     例如统一放到 `res://.probe/`（整个目录加进忽略规则），用完连同目录一起删，不会有半删状态。
 
 ### 003 编辑器报 Unrecognized UID（工程整目录搬迁的副作用）
 
