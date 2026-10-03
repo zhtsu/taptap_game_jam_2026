@@ -2,9 +2,15 @@ extends Node
 
 ## 游戏流程（常驻壳架构）：
 ##   boot（entry/main.tscn，本节点所在场景）
+##     → title_screen（标题屏：背景图 + "点击任意区域开始"，UiRoot 的 MIDDLE 层）
 ##     → title（主菜单，UiRoot 的 MIDDLE 层）
 ##     → gameplay（关卡场景挂进自己的 SceneRoot）
 ##     → pause（暂停界面，UiRoot 的 TOP 层；`get_tree().paused = true`）
+##
+## 标题屏与主菜单是**两个界面**：标题屏只负责"玩家确认"这一件事（发 TITLE_CONFIRMED），
+## 换界面的编排在本节点；主菜单才是功能入口（开始 / 设置 / 制作人员 / 退出）。
+## 注意：从关卡"返回标题"回到的是**主菜单**而不是标题屏 —— 标题屏是开机门面，每次回到主菜单
+## 都强制再看一遍"点击开始"会很烦。
 ##
 ## 为什么不是"整场景切换"：本节点与 UiRoot / SaveService 一起挂在 entry/main.tscn 上，
 ## 切关卡只替换 SceneRoot 里的内容 —— 存档状态、已打开的界面都不受切场景影响。
@@ -31,6 +37,8 @@ var _bus: Node = null
 var _transition: BaseTransition = null
 ## 当前关卡实例（没有 = 在标题界面）
 var _current_level: Node = null
+## 主菜单是否开着（`_on_open_main_menu` 用来避免重复打开）
+var _main_menu_open: bool = false
 ## 转场动画期间为 true，用来挡住重复的切换请求
 var _switching: bool = false
 
@@ -41,6 +49,8 @@ func _ready() -> void:
 	_setup_transition()
 
 	_bus = CoreSystem.event_bus
+	_bus.subscribe_unique_script(Events.TITLE_CONFIRMED, _on_title_confirmed)
+	_bus.subscribe_unique_script(Events.OPEN_MAIN_MENU, _on_open_main_menu)
 	_bus.subscribe_unique_script(Events.START_GAME, _on_start_game)
 	_bus.subscribe_unique_script(Events.RETURN_TO_TITLE, _on_return_to_title)
 	_bus.subscribe_unique_script(Events.PAUSE_TOGGLE, _on_pause_toggle)
@@ -49,6 +59,8 @@ func _ready() -> void:
 func _exit_tree() -> void:
 	if _bus == null:
 		return
+	_bus.unsubscribe(Events.TITLE_CONFIRMED, _on_title_confirmed)
+	_bus.unsubscribe(Events.OPEN_MAIN_MENU, _on_open_main_menu)
 	_bus.unsubscribe(Events.START_GAME, _on_start_game)
 	_bus.unsubscribe(Events.RETURN_TO_TITLE, _on_return_to_title)
 	_bus.unsubscribe(Events.PAUSE_TOGGLE, _on_pause_toggle)
@@ -63,12 +75,57 @@ func _unhandled_input(event: InputEvent) -> void:
 
 #region 流程动作
 
+## 标题屏被确认：关标题屏 → 淡黑 → 打开主菜单 → 淡回。
+## 只是界面换场，不动 `_current_level`（此时本来就没有关卡）。
+func _on_title_confirmed() -> void:
+	if _switching:
+		return
+	_switching = true
+
+	await _fade_out()
+	CoreSystem.event_bus.push_event(Events.CLOSE_UI, Paths.UI_TITLE_SCREEN)
+	_open_ui(Paths.UI_MAIN_MENU, Types.UiLayer.MIDDLE)
+	_main_menu_open = true
+	CoreSystem.logger.info("[GameFlow] 标题屏已确认，进入主菜单")
+
+	await _fade_in()
+	_switching = false
+
+
+## 请求回主菜单（由设置这类界面发出）：先关掉请求方，再打开主菜单。
+## 顺序固定在这里，避免"界面自己先开后关"导致同层出现两个界面。
+## 主菜单已经开着时只关请求方、不重复打开。
+func _on_open_main_menu(from_path: String = "") -> void:
+	if not from_path.is_empty():
+		CoreSystem.event_bus.push_event(Events.CLOSE_UI, from_path)
+	if _main_menu_open:
+		return
+
+	await _fade_out()
+	_open_ui(Paths.UI_MAIN_MENU, Types.UiLayer.MIDDLE)
+	_main_menu_open = true
+	CoreSystem.logger.info("[GameFlow] 打开主菜单")
+	await _fade_in()
+
+
+## 从设置界面返回主菜单
+func _on_options_back() -> void:
+	CoreSystem.event_bus.push_event(Events.OPEN_MAIN_MENU, Paths.UI_OPTIONS)
+
+
+## 从设置界面打开制作人员：先关设置、再开制作人员，顺序固定在这里
+func _on_options_credits() -> void:
+	CoreSystem.event_bus.push_event(Events.CLOSE_UI, Paths.UI_OPTIONS)
+	_open_ui(Paths.UI_CREDITS, Types.UiLayer.MIDDLE)
+
+
 ## 开始游戏：关主菜单 → 淡黑 → 换关卡 → 淡回
 func _on_start_game(level_path: String) -> void:
 	if _switching:
 		return
 	_switching = true
 	CoreSystem.event_bus.push_event(Events.CLOSE_UI, Paths.UI_MAIN_MENU)
+	_main_menu_open = false
 
 	await _fade_out()
 	_free_current_level()
@@ -133,6 +190,14 @@ func _on_pause_toggle() -> void:
 
 
 #region 内部实现
+
+## 打开一个界面：填 OpenUiRequest 的样板只留在这里（界面实例化/分层/记账都归 UiRoot）
+func _open_ui(ui_path: String, ui_layer: int = Types.UiLayer.MIDDLE) -> void:
+	var request: Types.OpenUiRequest = Types.OpenUiRequest.new()
+	request.path = ui_path
+	request.ui_layer = ui_layer
+	CoreSystem.event_bus.push_event(Events.OPEN_UI, request)
+
 
 ## 转场动画：借框架的 FadeTransition（只借动画，不用它那套整场景切换）。
 ## 遮罩矩形本身是 entry/main.tscn 里的 GameFlow/TransitionLayer/FadeRect —— 编辑器里可见可调，

@@ -22,12 +22,12 @@ CoreSystem="*uid://cbspmadydncps"
 
 [display]
 
-window/size/viewport_width=750
-window/size/viewport_height=1624
+window/size/viewport_width=1080
+window/size/viewport_height=2400
 window/size/resizable=false
 window/size/maximize_disabled=true
-window/size/window_width_override=360
-window/size/window_height_override=780
+window/size/window_width_override=270
+window/size/window_height_override=600
 window/stretch/mode="canvas_items"
 window/handheld/orientation=1
 

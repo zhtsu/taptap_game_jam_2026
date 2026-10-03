@@ -11,20 +11,11 @@ msgstr ""
 "Content-Transfer-Encoding: 8bit\n"
 "X-Generator: Poedit 3.9\n"
 
-msgid "ui.main_menu.title"
-msgstr "戈多游戏模板"
+msgid "ui.title_screen.tap_to_start"
+msgstr "点击任意区域开始"
 
 msgid "ui.main_menu.start"
 msgstr "开始"
-
-msgid "ui.main_menu.options"
-msgstr "设置"
-
-msgid "ui.main_menu.credits"
-msgstr "制作人员"
-
-msgid "ui.main_menu.quit_game"
-msgstr "退出游戏"
 
 msgid "ui.options.resolution"
 msgstr "分辨率"
@@ -76,3 +67,19 @@ msgstr "请按键…"
 
 msgid "ui.options.back"
 msgstr "返回"
+
+msgid "ui.main_menu.settings"
+msgstr "设置"
+
+msgid "ui.main_menu.workshop"
+msgstr "车间"
+
+msgid "ui.main_menu.warehouse"
+msgstr "仓库"
+
+msgid "ui.main_menu.map"
+msgstr "地图"
+
+msgid "ui.main_menu.score"
+msgstr "评分"
+

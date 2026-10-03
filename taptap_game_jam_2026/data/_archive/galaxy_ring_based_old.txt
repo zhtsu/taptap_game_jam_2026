@@ -1,0 +1,110 @@
+[gd_resource type="Resource" script_class="GalaxyConfig" format=3 uid="uid://b8nq81kffltcd"]
+
+[ext_resource type="Script" uid="uid://b8ryp7fv006bt" path="res://ui/galaxy/galaxy_planet.gd" id="1_r4pn2"]
+[ext_resource type="Script" uid="uid://bi1ppsdad5xxq" path="res://ui/galaxy/galaxy_ring.gd" id="2_0c5ud"]
+[ext_resource type="Script" uid="uid://bawwi6x2phuqg" path="res://ui/galaxy/galaxy_config.gd" id="3_784cd"]
+
+[sub_resource type="Resource" id="Resource_rkct8"]
+script = ExtResource("1_r4pn2")
+label = "类地"
+scene = "res://addons/naejimer_3d_planet_generator/scenes/planet_terrestrial.tscn"
+height = 20.0
+scale = 0.75
+spin_speed = 10.0
+
+[sub_resource type="Resource" id="Resource_2vx81"]
+script = ExtResource("1_r4pn2")
+label = "无大气"
+scene = "res://addons/naejimer_3d_planet_generator/scenes/planet_no_atmosphere.tscn"
+angle_deg = 70.0
+height = 45.0
+scale = 280.0
+spin_speed = 14.0
+
+[sub_resource type="Resource" id="Resource_2trw3"]
+script = ExtResource("1_r4pn2")
+label = "熔岩"
+scene = "res://addons/naejimer_3d_planet_generator/scenes/planet_lava.tscn"
+angle_deg = 180.0
+height = -25.0
+scale = 0.6
+spin_speed = 12.0
+
+[sub_resource type="Resource" id="Resource_4lcly"]
+script = ExtResource("1_r4pn2")
+label = "沙"
+scene = "res://addons/naejimer_3d_planet_generator/scenes/planet_sand.tscn"
+angle_deg = 250.0
+height = -50.0
+scale = 0.7
+spin_speed = 8.0
+
+[sub_resource type="Resource" id="Resource_h8la5"]
+script = ExtResource("2_0c5ud")
+radius = 620.0
+orbit_speed = 4.0
+planets = [SubResource("Resource_rkct8"), SubResource("Resource_2vx81"), SubResource("Resource_2trw3"), SubResource("Resource_4lcly")]
+
+[sub_resource type="Resource" id="Resource_2j4gx"]
+script = ExtResource("1_r4pn2")
+label = "冰"
+scene = "res://addons/naejimer_3d_planet_generator/scenes/planet_ice.tscn"
+angle_deg = 40.0
+height = 40.0
+scale = 0.75
+spin_speed = 9.0
+
+[sub_resource type="Resource" id="Resource_sjs6e"]
+script = ExtResource("1_r4pn2")
+label = "气态"
+scene = "res://addons/naejimer_3d_planet_generator/scenes/planet_gaseous.tscn"
+angle_deg = 200.0
+height = -45.0
+scale = 300.0
+spin_speed = 7.0
+
+[sub_resource type="Resource" id="Resource_up1uv"]
+script = ExtResource("1_r4pn2")
+label = "熔岩"
+scene = "res://addons/naejimer_3d_planet_generator/scenes/planet_lava.tscn"
+angle_deg = 300.0
+height = 5.0
+scale = 0.6
+spin_speed = 12.0
+
+[sub_resource type="Resource" id="Resource_seqty"]
+script = ExtResource("2_0c5ud")
+radius = 1150.0
+orbit_speed = -6.0
+planets = [SubResource("Resource_2j4gx"), SubResource("Resource_sjs6e"), SubResource("Resource_up1uv")]
+
+[sub_resource type="Resource" id="Resource_p6uk4"]
+script = ExtResource("1_r4pn2")
+label = "气态"
+scene = "res://addons/naejimer_3d_planet_generator/scenes/planet_gaseous.tscn"
+angle_deg = 110.0
+height = -30.0
+scale = 300.0
+spin_speed = 7.0
+
+[sub_resource type="Resource" id="Resource_1gms6"]
+script = ExtResource("1_r4pn2")
+label = "冰"
+scene = "res://addons/naejimer_3d_planet_generator/scenes/planet_ice.tscn"
+angle_deg = 290.0
+height = 35.0
+scale = 0.75
+spin_speed = 9.0
+
+[sub_resource type="Resource" id="Resource_luo3m"]
+script = ExtResource("2_0c5ud")
+radius = 1750.0
+orbit_speed = 8.0
+planets = [SubResource("Resource_p6uk4"), SubResource("Resource_1gms6")]
+
+[resource]
+script = ExtResource("3_784cd")
+rings = [SubResource("Resource_h8la5"), SubResource("Resource_seqty"), SubResource("Resource_luo3m")]
+camera_target_y = -800.0
+camera_pitch_deg = 30.0
+

@@ -162,10 +162,9 @@ unique_name_in_owner = true
 custom_minimum_size = Vector2(220, 34)
 layout_mode = 2
 max_value = 10.0
-step = 1.0
 value = 10.0
 
-[node name="MasterVolumeValue" type="Label" parent="Rows/RowMaster"]
+[node name="MasterVolumeValue" type="Label" parent="Rows/RowMaster" unique_id=188611102]
 custom_minimum_size = Vector2(48, 0)
 layout_mode = 2
 theme_override_colors/font_color = Color(0.615686, 0.615686, 0.615686, 1)
@@ -198,10 +197,9 @@ unique_name_in_owner = true
 custom_minimum_size = Vector2(220, 34)
 layout_mode = 2
 max_value = 10.0
-step = 1.0
 value = 10.0
 
-[node name="MusicVolumeValue" type="Label" parent="Rows/RowMusic"]
+[node name="MusicVolumeValue" type="Label" parent="Rows/RowMusic" unique_id=1056191723]
 custom_minimum_size = Vector2(48, 0)
 layout_mode = 2
 theme_override_colors/font_color = Color(0.615686, 0.615686, 0.615686, 1)
@@ -234,10 +232,9 @@ unique_name_in_owner = true
 custom_minimum_size = Vector2(220, 34)
 layout_mode = 2
 max_value = 10.0
-step = 1.0
 value = 10.0
 
-[node name="SfxVolumeValue" type="Label" parent="Rows/RowSfx"]
+[node name="SfxVolumeValue" type="Label" parent="Rows/RowSfx" unique_id=227990221]
 custom_minimum_size = Vector2(48, 0)
 layout_mode = 2
 theme_override_colors/font_color = Color(0.615686, 0.615686, 0.615686, 1)

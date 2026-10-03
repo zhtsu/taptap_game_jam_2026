@@ -1,0 +1,75 @@
+[gd_scene format=3 uid="uid://b1titl3scr33n"]
+
+[ext_resource type="Script" uid="uid://wk6piur3n72x" path="res://ui/title_screen/title_screen.gd" id="1_title"]
+[ext_resource type="Texture2D" uid="uid://jn440kp3t243" path="res://ui/title_screen/textures/title_screen.png" id="2_ffat2"]
+
+[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_dim"]
+content_margin_left = 32.0
+content_margin_top = 14.0
+content_margin_right = 32.0
+content_margin_bottom = 14.0
+bg_color = Color(0, 0, 0, 0.45)
+corner_radius_top_left = 999
+corner_radius_top_right = 999
+corner_radius_bottom_right = 999
+corner_radius_bottom_left = 999
+
+[node name="TitleScreen" type="Control" unique_id=2030826697]
+layout_mode = 3
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+script = ExtResource("1_title")
+
+[node name="Background" type="TextureRect" parent="." unique_id=2004558391]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+mouse_filter = 2
+texture = ExtResource("2_ffat2")
+expand_mode = 1
+stretch_mode = 5
+
+[node name="HintAnchor" type="Control" parent="." unique_id=190030383]
+layout_mode = 1
+anchors_preset = 12
+anchor_top = 1.0
+anchor_right = 1.0
+anchor_bottom = 1.0
+offset_top = -600.0
+offset_bottom = -440.0
+grow_horizontal = 2
+grow_vertical = 0
+mouse_filter = 2
+
+[node name="Dim" type="PanelContainer" parent="HintAnchor" unique_id=190030384]
+layout_mode = 1
+anchors_preset = 8
+anchor_left = 0.5
+anchor_top = 0.5
+anchor_right = 0.5
+anchor_bottom = 0.5
+offset_left = -484.0
+offset_top = -70.18
+offset_right = 484.0
+offset_bottom = 70.18
+grow_horizontal = 2
+grow_vertical = 2
+mouse_filter = 2
+theme_override_styles/panel = SubResource("StyleBoxFlat_dim")
+
+[node name="TapToStart" type="Label" parent="HintAnchor/Dim" unique_id=1765804528]
+unique_name_in_owner = true
+layout_mode = 2
+theme_override_colors/font_color = Color(1, 1, 1, 1)
+theme_override_colors/font_outline_color = Color(0.0196078, 0.0196078, 0.027451, 1)
+theme_override_constants/outline_size = 6
+theme_override_font_sizes/font_size = 64
+text = "ui.title_screen.tap_to_start"
+horizontal_alignment = 1
+vertical_alignment = 1

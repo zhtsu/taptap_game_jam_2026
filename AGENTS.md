@@ -84,6 +84,42 @@ Godot **4.7** 项目模板（纯 GDScript），用来快速起各种游戏。分
    `rm` / `mv` 等**一律不许**，除非人类在当次对话里明确要求。需要提交时，在报告里写出**建议人类执行的
    命令和原因**。只读查询（`git status` / `diff` / `log` / `show` / `ls-files` …）随时可用。
 
+## 可配置数据的分层（`data/` vs `save_data/`）
+
+新增"能在编辑器里配的数据"时按这个分工放，别混：
+
+| 目录 | 放什么 | 例子 |
+|---|---|---|
+| `data/types/` | **类型定义**：`Resource` 子类，`@export` 出一堆字段 | `GalaxyBody`、`GalaxyConfig` |
+| `data/resources/` | **配好的实例**：`.tres`，在编辑器里改数值 | `galaxy.tres`（路径经 `Paths.GALAXY_CONFIG` 引用） |
+| `data/_archive/` | 被取代的旧配置快照。**存 `.txt` 不存 `.tres`** | `galaxy_ring_based_old.txt` |
+| `save_data/` | **玩家存档**的分段（一套独立体系，见下节） | `OptionsSave`、`MetaSave` |
+
+**为什么 `save_data/` 不并进 `data/`**：存档那套自带版本迁移、类型校验、纯数据约束，
+是一层完整契约；`data/` 是"业务配置"。两者都是 `Resource`/`RefCounted` 数据类，但生命周期完全不同
+（配置是开发期静态资源，存档是运行期读写文件）。
+
+**加一类新配置的步骤**：
+1. `data/types/xxx.gd`：`class_name Xxx extends Resource`，字段用 `@export`；
+   **要嵌套列表就再建一个独立顶层类**（内部类无法被 `.tres` 正确序列化，见 `ENGINEERING_NOTES.md` 008）；
+   **导出数组写 `Array` 不要写 `Array[自定义类型]`**（同上）；
+2. 路径常量加到 `core/paths.gd`（`res://` 字面量只能出现在那里）；
+3. `data/resources/xxx.tres` 里配实例（手写容易错，用 `ResourceSaver.save()` 生成更稳）；
+4. 加载方用 `@export_file("*.tres")` 或 `Paths.XXX` 引用，**存完必须读回来断言字段值**。
+
+**`.tres` 里"哪些字段是显式的"**（本项目已按此约定执行）：
+
+- **`ResourceSaver.save()` 会跳过值等于 `@export` 默认值的属性** —— 实测 32 个配置字段只写出
+  8 个，其余 30 个在文件里根本没有对应行。**给属性显式赋一次值也无效**（赋的就是默认值）。
+  所以"让默认值也出现在文件里"**只能手写 `.tres`**，不能靠保存生成。
+- 本项目约定：**`data/resources/*.tres` 写全每一个字段**，让文件本身是一份完整可读的配置，
+  不用回头翻 `data/types/xxx.gd` 的默认值。`galaxy.tres` 是范例：
+  `[resource]` 段 33 行（`bodies` + 32 个配置字段），每个天体子资源 10 行（全部 9 个 + `script`）。
+- 手写 `.tres` 的**字段名必须与脚本里的变量名逐字一致**（`.tres` 里名字写错 = **静默忽略**，
+  不报错、不提示，值悄悄变回默认）。所以**手写完必须读回逐字段断言**，
+  且断言要覆盖**每一个**字段，不能只抽查几个。
+- 手写用到的类型字面量：`Color(r, g, b, a)`、`Vector3(x, y, z)`、`@export_file` 的字段写成带引号的字符串。
+
 ## 存档系统契约（改动前必读）
 
 - **格式**：4 字节魔数 `GTSV` + `var_to_bytes(纯数据字典)`，扩展名 `.sav`；读用 `bytes_to_var()`
@@ -175,6 +211,22 @@ pwsh scripts/verify-engine.ps1 -NoBaseline                               # 只�
 - `$长/节点/路径` 改名后要运行时才报错 → 用 `%唯一名`、`@export`，或在 `.tscn` 里用
   `[connection signal="pressed" from="..." to="." method="..."]` 连信号（本项目主菜单/暂停/制作人员都是这么连的）。
 - 全局类缓存、`.po` 翻译、`.uid` 都参与 `--import` 流程；手改 `.tscn` 的 `ext_resource` 时不要漏 `uid`。
+- **shader 的语法 / 编译错误在 headless 下不一定暴露**（惰性编译）→ 改完 shader 别只看
+  "场景跑起来没报错"：用 `Shader.get_shader_uniform_list()` 探针确认能拿到 uniform 列表，
+  或真开窗口跑一遍（详见 `ENGINEERING_NOTES.md` 006）。
+- **shader 里 `mod(x, 0.0)` 是"静默失效"写法**：除零 → `NaN` → 采样未定义，**不报错、不崩溃，
+  只是效果没了**。要"取小数部分"直接写 `fract()`（顺带避开 `TIME` 变大后的精度抖动）。
+- **不要用 `get_aabb()` / 节点 `scale` 推断第三方插件的可见尺寸**：带顶点位移 / 外壳 /
+  菲涅尔的材质，画出来的球面**不落在网格 AABB 上**；插件场景里往往还烘焙了极大的 transform
+  （本项目插件恒星 ×1200、气态行星 ×800），配置里的 `scale` 是在反向补偿它。
+  用 AABB 推半径会得到**差好几个数量级**的数字，并据此改错参数（`ENGINEERING_NOTES.md` 010）。
+  **视觉结论只能渲染实测**。
+- **视觉验证必须非 headless**：`verify-engine.ps1 -Probe` 恒为 headless，只适合跑逻辑；
+  要看画面就自己起窗口跑探针 —— 把场景挂进离屏 `SubViewport`（尺寸设为目标分辨率）
+  → `get_texture().get_image().save_png()` 存图 → 读图或对像素做连通域统计：
+  ```powershell
+  & "C:\portable\Godot\4.7.2\Godot_v4.7.2-stable_win64_console.exe" --path <proj> --script res://_probe_shot.gd
+  ```
 - Tween 默认 `TWEEN_PAUSE_BOUND`：节点的 `process_mode` 决定它在暂停时是否推进 —— 转场/暂停界面要 ALWAYS。
 
 ## 目录速查
@@ -183,6 +235,9 @@ pwsh scripts/verify-engine.ps1 -NoBaseline                               # 只�
 |---|---|
 | `entry/` | `main.tscn`（主场景/常驻壳）、`main.gd` |
 | `core/` | 约定（`paths` / `events` / `types` / `options_data`）+ 服务脚本（`save_storage` / `options_applier`）+ 三个独立场景（`ui_root.tscn` / `save_service.tscn` / `game_flow.tscn`，都挂在 `entry/main.tscn` 上） |
+| `data/types/` | **可配置数据的类型定义**（`Resource` 子类，如 `GalaxyBody` / `GalaxyConfig`）。加"能在编辑器里配的数据"就放这里 |
+| `data/resources/` | **配好的数据实例**（`.tres`，如 `galaxy.tres`）。路径走 `Paths.GALAXY_CONFIG` 这类常量 |
+| `data/_archive/` | 被取代的旧配置快照（**存成 `.txt` 而不是 `.tres`**：引用了已删脚本的 `.tres` 是"加载就报错的坏资源"） |
 | `save_data/` | `save_section.gd`（基类）、`save_data.gd`（根）、`meta_save.gd`（元数据段）、`options_save.gd`（设置段） |
 | `ui/` | `main_menu/`、`options/`、`pause_menu/`、`credits/` |
 | `game/` | 关卡场景（模板只放 `example_level`；换成自己的关卡后改 `Paths.GAME_EXAMPLE_LEVEL`） |
@@ -197,7 +252,18 @@ pwsh scripts/verify-engine.ps1 -NoBaseline                               # 只�
   全部是**改动即存**（没有 Apply / Cancel）；落盘 `version = 4`。
 - `[input]` 动作表目前只有 `pause`（ESC）。要让玩家改移动 / 跳跃等玩法动作：先在 `project.godot` 的
   `[input]` 里加动作，再把动作加进 `OptionsData.REMAPPABLE_ACTIONS`（界面会自动多出一行）。
-- 存量静态 warn 已清零（`godot-lint.ps1` 报 `error=0 warn=0`）。
+- **存量静态 warn 已清零**：`godot-lint.ps1` 报 `error=0 warn=0`。
+  原先 6 条 `locale_orphan` 来自**主菜单里已不存在的按钮**
+  （`ui.main_menu.title` / `.options` / `.credits` / `.quit_game` / `.galaxy_placeholder`），
+  已从 `locale/` 三处同步删除。注意 `ui.main_menu.credits` 和 credits 界面用的
+  `ui.credits.*`（`title` / `body` / `back`）**是两套 key** —— 删前者不影响后者，
+  别连坐删掉。
+- `godot-lint.ps1` 的 `-Project` 接受相对路径（入口会 `Resolve-Path` 归一化），
+  不带参数时自动探测仓库根下含 `project.godot` 的目录。
+- **仅编辑器导入时**会出现一次 `ERROR: Unrecognized UID: "uid://cc28skn5h7aup"`
+  （就是 `entry/main.tscn` 自己的 UID），`--editor --quit` 反复跑都在、不在基线里，
+  且**正常启动（`--quit-after`）不出现**、`entry/main.tscn` 与 HEAD 逐字一致。
+  属于编辑器 UID 缓存的既有噪声，**不是回归**，没定位到根因前别乱改 `main.tscn` 的 uid。
 
 ## 工程笔记（改完代码 MUST 登记）
 

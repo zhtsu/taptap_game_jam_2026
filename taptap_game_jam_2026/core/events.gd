@@ -20,6 +20,13 @@ const CLOSE_UI: String =    "close_ui"
 # ===== 游戏流程事件 =====
 ## 开始游戏（payload: 关卡场景路径 String，取值来自 core/paths.gd）
 const START_GAME: String =       "start_game"
+## 标题屏被玩家确认（点击 / 触摸 / 按键，无 payload）。
+## 由 ui/title_screen/title_screen.gd 发出，core/game_flow.gd 收到后换成主菜单。
+const TITLE_CONFIRMED: String =  "title_confirmed"
+## 请求打开主菜单（无 payload）。给"设置"这类需要在关闭自己的同时回到主菜单的界面用。
+## 为什么不让界面自己先 OPEN 再 CLOSE：两个事件都是异步派发，顺序不保证；
+## 统一交给 core/game_flow.gd 按固定顺序先关后开（这样"同层只有一个界面"的假设才成立）。
+const OPEN_MAIN_MENU: String =   "open_main_menu"
 ## 回到标题界面（无 payload）
 const RETURN_TO_TITLE: String =  "return_to_title"
 ## 暂停 / 恢复切换（无 payload）。暂停状态的唯一权威是 core/game_flow.gd：

@@ -1,16 +1,7 @@
-msgid "ui.main_menu.title"
+msgid "ui.title_screen.tap_to_start"
 msgstr ""
 
 msgid "ui.main_menu.start"
-msgstr ""
-
-msgid "ui.main_menu.options"
-msgstr ""
-
-msgid "ui.main_menu.credits"
-msgstr ""
-
-msgid "ui.main_menu.quit_game"
 msgstr ""
 
 msgid "ui.options.resolution"
@@ -63,3 +54,19 @@ msgstr ""
 
 msgid "ui.options.back"
 msgstr ""
+
+msgid "ui.main_menu.settings"
+msgstr ""
+
+msgid "ui.main_menu.workshop"
+msgstr ""
+
+msgid "ui.main_menu.warehouse"
+msgstr ""
+
+msgid "ui.main_menu.map"
+msgstr ""
+
+msgid "ui.main_menu.score"
+msgstr ""
+

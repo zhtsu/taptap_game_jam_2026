@@ -31,19 +31,36 @@ param(
 $ErrorActionPreference = 'Stop'
 
 $repoRoot = (Resolve-Path (Join-Path $PSScriptRoot '..')).Path
-if (-not $Project) { $Project = Join-Path $repoRoot 'godot-template' }
+if (-not $Project) {
+    # 默认值不写死目录名：工程从 godot-template 改名过一次，写死就静默扫错目录。
+    # 取仓库根下第一个含 project.godot 的子目录；多个时按名字排序取第一个（可用 -Project 覆盖）。
+    $candidates = Get-ChildItem -LiteralPath $repoRoot -Directory |
+        Where-Object { Test-Path -LiteralPath (Join-Path $_.FullName 'project.godot') } |
+        Sort-Object -Property Name
+    if ($candidates.Count -eq 0) {
+        Write-Host "ERROR: $repoRoot 下找不到含 project.godot 的工程目录；用 -Project 指定。" -ForegroundColor Red
+        exit 2
+    }
+    $Project = $candidates[0].FullName
+    if ($candidates.Count -gt 1) {
+        Write-Host "提示：发现多个工程，默认用 $($candidates[0].Name)（用 -Project 指定其它的）。" -ForegroundColor Yellow
+    }
+}
 if (-not (Test-Path (Join-Path $Project 'project.godot'))) {
     Write-Host "ERROR: $Project 下没有 project.godot；用 -Project 指定工程目录。" -ForegroundColor Red
     exit 2
 }
+# MUST 转绝对路径：Get-ProjectRelPath 用 $Project.Length 去切 FullName，
+# 相对路径会让所有 allow 列表（core/paths.gd 等）失配 —— 表现为"paths / events 规则全量误报"。
+$Project = (Resolve-Path -LiteralPath $Project).Path
 
 # --- 可调配置 -------------------------------------------------------------
-$scanDirs = @('core', 'entry', 'ui', 'save_data', 'game')      # 只扫项目层，不扫 addons/
+$scanDirs = @('core', 'entry', 'ui', 'save_data', 'game', 'data')   # 只扫项目层，不扫 addons/
 $pathsAllow = @('core/paths.gd')
 $eventsAllow = @('core/events.gd')
 $eventNames = @(
     'open_ui', 'close_ui',
-    'start_game', 'return_to_title', 'pause_toggle',
+    'start_game', 'title_confirmed', 'open_main_menu', 'open_credits', 'return_to_title', 'pause_toggle',
     'save_request', 'load_request', 'delete_save_request', 'save_list_request',
     'save_finished', 'load_finished', 'delete_save_finished', 'save_list_ready'
 )
@@ -138,8 +155,17 @@ foreach ($f in (Get-ScanFiles -Dirs $scanDirs -Extensions @('.gd'))) {
 }
 
 # --- 规则 3: UI 不得绕过 UiRoot ------------------------------------------
+# 豁免：这两个文件**不是 UiRoot 管理的界面**，而是主菜单自有的 3D 场景（星系背景）。
+# 它们没有"界面路径"可交给 ui_dict 记账，实例化/释放自己生成的 3D 子节点是正确做法，
+# 所以这里显式豁免（而不是把规则改松）。要新增豁免必须逐个写明理由。
+$uiBypassAllow = @(
+    'ui/galaxy/galaxy.gd',      # 星系场景：自己生成 WorldEnvironment/Rings/星球
+    'ui/main_menu/main_menu.gd' # 主菜单：把星系实例化进自己的 SubViewport
+)
 foreach ($f in (Get-ScanFiles -Dirs @('ui') -Extensions @('.gd'))) {
     $rel = Get-RelPath $f.FullName
+    $prel = Get-ProjectRelPath $f.FullName
+    if ($uiBypassAllow -contains $prel) { continue }
     $lines = Get-Content -LiteralPath $f.FullName -Encoding UTF8
     for ($i = 0; $i -lt $lines.Count; $i++) {
         if (Test-IsCommentLine $lines[$i]) { continue }
