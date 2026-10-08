@@ -1,0 +1,12 @@
+[gd_resource type="Resource" script_class="WorkshopPart" format=3]
+
+[ext_resource type="Script" path="res://data/types/workshop_part.gd" id="1_part"]
+
+[resource]
+script = ExtResource("1_part")
+id = "spike_bracer"
+name_key = "ui.part.spike_bracer"
+rarity = 1
+cost = 10
+slot_id = "hand_l"
+behavior_scene = "res://data/parts/spike_bracer/spike_bracer.tscn"

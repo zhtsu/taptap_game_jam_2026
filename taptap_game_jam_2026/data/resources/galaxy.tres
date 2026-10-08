@@ -6,22 +6,27 @@
 [sub_resource type="Resource" id="Resource_star"]
 script = ExtResource("1_l31vn")
 label = "恒星"
+name_key = "ui.map.body.star"
 scene = "res://addons/naejimer_3d_planet_generator/scenes/star.tscn"
 scale = 0.48
 spin_speed = 2.0
 orbit_speed = 0.0
+focus_radius_scale = 1.1533
 
 [sub_resource type="Resource" id="Resource_terrestrial"]
 script = ExtResource("1_l31vn")
 label = "类地"
+name_key = "ui.map.body.terrestrial"
 scene = "res://addons/naejimer_3d_planet_generator/scenes/planet_terrestrial.tscn"
 scale = 0.75
 spin_speed = 10.0
 orbit_speed = 4.0
+focus_radius_scale = 2.0358
 
 [sub_resource type="Resource" id="Resource_no_atmosphere"]
 script = ExtResource("1_l31vn")
 label = "无大气"
+name_key = "ui.map.body.no_atmosphere"
 scene = "res://addons/naejimer_3d_planet_generator/scenes/planet_no_atmosphere.tscn"
 scale = 0.8
 spin_speed = 14.0
@@ -30,38 +35,46 @@ orbit_speed = 4.0
 [sub_resource type="Resource" id="Resource_lava"]
 script = ExtResource("1_l31vn")
 label = "熔岩"
+name_key = "ui.map.body.lava"
 scene = "res://addons/naejimer_3d_planet_generator/scenes/planet_lava.tscn"
 scale = 0.6
 spin_speed = 12.0
 orbit_speed = -6.0
+focus_radius_scale = 2.0256
 
 [sub_resource type="Resource" id="Resource_sand"]
 script = ExtResource("1_l31vn")
 label = "沙"
+name_key = "ui.map.body.sand"
 scene = "res://addons/naejimer_3d_planet_generator/scenes/planet_sand.tscn"
 scale = 0.7
 orbit_speed = -6.0
+focus_radius_scale = 1.9954
 
 [sub_resource type="Resource" id="Resource_ice"]
 script = ExtResource("1_l31vn")
 label = "冰"
+name_key = "ui.map.body.ice"
 scene = "res://addons/naejimer_3d_planet_generator/scenes/planet_ice.tscn"
 scale = 0.75
 spin_speed = 9.0
 orbit_speed = 7.0
+focus_radius_scale = 1.9852
 
 [sub_resource type="Resource" id="Resource_gaseous"]
 script = ExtResource("1_l31vn")
 label = "气态"
+name_key = "ui.map.body.gaseous"
 scene = "res://addons/naejimer_3d_planet_generator/scenes/planet_gaseous.tscn"
 scale = 0.25
 spin_speed = 7.0
 orbit_speed = 7.0
+focus_radius_scale = 1.0385
 
 [resource]
 script = ExtResource("2_jliw8")
 bodies = [SubResource("Resource_star"), SubResource("Resource_terrestrial"), SubResource("Resource_no_atmosphere"), SubResource("Resource_lava"), SubResource("Resource_sand"), SubResource("Resource_ice"), SubResource("Resource_gaseous")]
-camera_target_y = -1200.0
+camera_target_y = -1000.0
 camera_position_y = 3653.0
 camera_distance = 10800.0
 camera_orbit_deg = 20.0

@@ -54,6 +54,16 @@ func _open_ui(request: Types.OpenUiRequest) -> void:
 
 	ui_dict[request.path] = ui_node
 
+	# 把"谁开的这个界面"交给界面自己（可选契约：界面实现了 `set_caller()` 才交）。
+	# 必须在 add_child **之后**：`set_caller()` 里通常要动 `%唯一名` 节点，那些要 `_ready()` 才解析。
+	# 界面据此做和来源有关的行为（`ui/workshop` 从地图进 / 从方案进是两种形态）。
+	if not request.caller.is_empty():
+		if ui_node.has_method(&"set_caller"):
+			ui_node.call(&"set_caller", request.caller)
+		else:
+			CoreSystem.logger.warning("[UiRoot] %s 没有 set_caller()，来源 '%s' 被忽略" % [
+				request.path, request.caller])
+
 	# UI 自己离开场景树（自己 queue_free / 父节点被释放）时自动清掉记录，
 	# 否则 ui_dict 会留下悬空引用，下次打开同一路径就会报错
 	ui_node.tree_exited.connect(_on_ui_tree_exited.bind(request.path))

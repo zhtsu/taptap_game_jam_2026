@@ -1,0 +1,31 @@
+[gd_resource type="Resource" script_class="MapConfig" format=3]
+
+[ext_resource type="Script" path="res://data/types/map_planet_info.gd" id="1_info"]
+[ext_resource type="Script" path="res://data/types/map_config.gd" id="2_map"]
+
+[sub_resource type="Resource" id="Card_level"]
+script = ExtResource("1_info")
+title_key = "ui.map.card.level.title"
+body_key = "ui.map.card.level.body"
+body_label = "无大气"
+body_index = 2
+
+[sub_resource type="Resource" id="Card_boss"]
+script = ExtResource("1_info")
+title_key = "ui.map.card.boss.title"
+body_key = "ui.map.card.boss.body"
+body_label = "无大气"
+body_index = 2
+
+[sub_resource type="Resource" id="Card_progress"]
+script = ExtResource("1_info")
+title_key = "ui.map.card.progress.title"
+body_key = "ui.map.card.progress.body"
+body_label = "无大气"
+body_index = 2
+
+[resource]
+script = ExtResource("2_map")
+target_body_label = "无大气"
+target_body_index = 2
+cards = [SubResource("Card_level"), SubResource("Card_boss"), SubResource("Card_progress")]

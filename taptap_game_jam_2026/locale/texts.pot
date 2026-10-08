@@ -4,12 +4,6 @@ msgstr ""
 msgid "ui.main_menu.start"
 msgstr ""
 
-msgid "ui.options.resolution"
-msgstr ""
-
-msgid "ui.options.fullscreen"
-msgstr ""
-
 msgid "ui.options.language"
 msgstr ""
 
@@ -34,6 +28,21 @@ msgstr ""
 msgid "ui.game.hint"
 msgstr ""
 
+msgid "ui.game.distance"
+msgstr ""
+
+msgid "ui.game.fail_title"
+msgstr ""
+
+msgid "ui.game.fail_body"
+msgstr ""
+
+msgid "ui.game.restart"
+msgstr ""
+
+msgid "ui.game.back_menu"
+msgstr ""
+
 msgid "ui.options.master_volume"
 msgstr ""
 
@@ -43,30 +52,171 @@ msgstr ""
 msgid "ui.options.sfx_volume"
 msgstr ""
 
-msgid "ui.options.pause_key"
-msgstr ""
-
-msgid "ui.options.reset_key"
-msgstr ""
-
-msgid "ui.options.waiting_key"
-msgstr ""
-
 msgid "ui.options.back"
 msgstr ""
 
 msgid "ui.main_menu.settings"
 msgstr ""
 
-msgid "ui.main_menu.workshop"
+msgid "ui.main_menu.plan"
 msgstr ""
 
 msgid "ui.main_menu.warehouse"
 msgstr ""
 
-msgid "ui.main_menu.map"
+msgid "ui.workshop.start"
 msgstr ""
 
-msgid "ui.main_menu.score"
+msgid "ui.workshop.back"
 msgstr ""
 
+msgid "ui.workshop.slot.brain"
+msgstr ""
+
+msgid "ui.workshop.slot.ear"
+msgstr ""
+
+msgid "ui.workshop.slot.hand_l"
+msgstr ""
+
+msgid "ui.workshop.slot.hand_r"
+msgstr ""
+
+msgid "ui.workshop.slot.chest"
+msgstr ""
+
+msgid "ui.workshop.slot.waist"
+msgstr ""
+
+msgid "ui.workshop.slot.back"
+msgstr ""
+
+msgid "ui.workshop.slot.tail"
+msgstr ""
+
+msgid "ui.workshop.slot.leg_l"
+msgstr ""
+
+msgid "ui.workshop.slot.leg_r"
+msgstr ""
+
+msgid "ui.workshop.slot.foot_l"
+msgstr ""
+
+msgid "ui.workshop.slot.foot_r"
+msgstr ""
+
+msgid "ui.part.spike_bracer"
+msgstr ""
+
+msgid "ui.part.dodge_brain"
+msgstr ""
+
+msgid "ui.warehouse.title"
+msgstr ""
+
+msgid "ui.warehouse.rarity"
+msgstr ""
+
+msgid "ui.warehouse.cost"
+msgstr ""
+
+msgid "ui.warehouse.slot"
+msgstr ""
+
+msgid "ui.warehouse.na"
+msgstr ""
+
+msgid "ui.map.next"
+msgstr ""
+
+msgid "ui.map.body.star"
+msgstr ""
+
+msgid "ui.map.body.terrestrial"
+msgstr ""
+
+msgid "ui.map.body.no_atmosphere"
+msgstr ""
+
+msgid "ui.map.body.lava"
+msgstr ""
+
+msgid "ui.map.body.sand"
+msgstr ""
+
+msgid "ui.map.body.ice"
+msgstr ""
+
+msgid "ui.map.body.gaseous"
+msgstr ""
+
+msgid "ui.map.card.level.title"
+msgstr ""
+
+msgid "ui.map.card.level.body"
+msgstr ""
+
+msgid "ui.map.card.boss.title"
+msgstr ""
+
+msgid "ui.map.card.boss.body"
+msgstr ""
+
+msgid "ui.map.card.progress.title"
+msgstr ""
+
+msgid "ui.map.card.progress.body"
+msgstr ""
+
+
+msgid "ui.plan.title"
+msgstr ""
+
+msgid "ui.plan.new"
+msgstr ""
+
+msgid "ui.plan.save"
+msgstr ""
+
+msgid "ui.plan.save_title"
+msgstr ""
+
+msgid "ui.plan.name_label"
+msgstr ""
+
+msgid "ui.plan.confirm"
+msgstr ""
+
+msgid "ui.plan.cancel"
+msgstr ""
+
+msgid "ui.plan.name_empty"
+msgstr ""
+
+msgid "ui.plan.save_failed"
+msgstr ""
+
+msgid "ui.plan.saved.body"
+msgstr ""
+
+msgid "ui.warehouse.close"
+msgstr ""
+
+msgid "ui.plan.card.assault.title"
+msgstr ""
+
+msgid "ui.plan.card.assault.body"
+msgstr ""
+
+msgid "ui.plan.card.heavy.title"
+msgstr ""
+
+msgid "ui.plan.card.heavy.body"
+msgstr ""
+
+msgid "ui.plan.card.ranged.title"
+msgstr ""
+
+msgid "ui.plan.card.ranged.body"
+msgstr ""

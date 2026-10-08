@@ -1,25 +1,13 @@
 class_name OptionsData
 
 ## 设置界面（Options）的可配置数据。
-## 只改这个文件，运行时两个下拉框就会显示对应条目；
-## 显示文字由 ui/options/options.gd 在填充时拼接。
-
-## 分辨率下拉框的候选值（Vector2i，显示时拼成 "1152 x 648"）
-const RESOLUTIONS: Array[Vector2i] = [
-	Vector2i(960, 540),
-	Vector2i(1152, 648),
-	Vector2i(1920, 1080),
-]
-
-## 是否在分辨率下拉框最底下追加一条「全屏」
-## 显示文字取翻译键 ui.options.fullscreen，选中时 metadata 是 FULLSCREEN
-const SHOW_FULLSCREEN_OPTION: bool = true
-
-## 「全屏」那一项在 metadata 里的标记值（Vector2i.ZERO 不是有效分辨率）
-const FULLSCREEN: Vector2i = Vector2i.ZERO
+## **现在的设置项只有两样：语言 + 三路音量**（分辨率 / 按键重映射在 2026-10-07 按人类要求删掉了，
+## 见 ENGINEERING_NOTES 028：删设置项要连存档字段与"应用"逻辑一起删，否则会变成
+## "界面上改不了、启动时却还在悄悄生效"）。
 
 ## 语言下拉框的候选值。
 ## locale 是 TranslationServer 用的语言代码（对应 locale/*.po），name 是下拉框里显示的文字。
+## name 用**语言自己的母语名**，不翻译（这是唯一允许写原文的地方）。
 const LANGUAGES: Array[Dictionary] = [
 	{"locale": "en", "name": "English"},
 	{"locale": "zh_CN", "name": "简体中文"},
@@ -32,6 +20,7 @@ const LANGUAGES: Array[Dictionary] = [
 const VOLUME_STEPS: Array[int] = [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10]
 ## 最大档位（= 线性音量 1.0）
 const VOLUME_MAX_STEP: int = 10
+
 
 ## 档位 → 线性音量（0.0 ~ 1.0），喂给 AudioServer / 存进存档用
 static func step_to_volume(step: int) -> float:
@@ -57,13 +46,4 @@ const VOLUME_WIDGETS: Array[Dictionary] = [
 	{"field": "master_volume", "slider": "MasterSlider", "value_label": "MasterVolumeValue"},
 	{"field": "music_volume", "slider": "MusicSlider", "value_label": "MusicVolumeValue"},
 	{"field": "sfx_volume", "slider": "SfxSlider", "value_label": "SfxVolumeValue"},
-]
-
-## 允许在设置界面重映射的动作（对应 project.godot 的 [input] 段）：
-##   action       动作名（与 [input] 里的一致）
-##   label_key    界面上那一行的翻译 key
-##   button_name  显示当前按键的按钮节点名（界面用 find_child 拿，避免长节点路径）
-## 没列在这里的动作保持引擎默认绑定，不受存档影响。
-const REMAPPABLE_ACTIONS: Array[Dictionary] = [
-	{"action": "pause", "label_key": "ui.options.pause_key", "button_name": "PauseKeyButton"},
 ]

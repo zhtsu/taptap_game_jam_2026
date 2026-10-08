@@ -17,12 +17,6 @@ msgstr "点击任意区域开始"
 msgid "ui.main_menu.start"
 msgstr "开始"
 
-msgid "ui.options.resolution"
-msgstr "分辨率"
-
-msgid "ui.options.fullscreen"
-msgstr "全屏"
-
 msgid "ui.options.language"
 msgstr "语言"
 
@@ -45,7 +39,22 @@ msgid "ui.credits.back"
 msgstr "返回"
 
 msgid "ui.game.hint"
-msgstr "示例关卡 —— 按 ESC 暂停"
+msgstr "角色按装配的部件自己行动 —— 装个会躲的脑，它才躲得开"
+
+msgid "ui.game.distance"
+msgstr "距离 %d 米"
+
+msgid "ui.game.fail_title"
+msgstr "撞车了"
+
+msgid "ui.game.fail_body"
+msgstr "这一趟跑了 %d 米"
+
+msgid "ui.game.restart"
+msgstr "重新开始"
+
+msgid "ui.game.back_menu"
+msgstr "返回主菜单"
 
 msgid "ui.options.master_volume"
 msgstr "主音量"
@@ -56,30 +65,171 @@ msgstr "音乐音量"
 msgid "ui.options.sfx_volume"
 msgstr "音效音量"
 
-msgid "ui.options.pause_key"
-msgstr "暂停键"
-
-msgid "ui.options.reset_key"
-msgstr "恢复默认"
-
-msgid "ui.options.waiting_key"
-msgstr "请按键…"
-
 msgid "ui.options.back"
 msgstr "返回"
 
 msgid "ui.main_menu.settings"
 msgstr "设置"
 
-msgid "ui.main_menu.workshop"
-msgstr "车间"
+msgid "ui.main_menu.plan"
+msgstr "方案"
 
 msgid "ui.main_menu.warehouse"
-msgstr "仓库"
+msgstr "图鉴"
 
-msgid "ui.main_menu.map"
-msgstr "地图"
+msgid "ui.workshop.start"
+msgstr "开始"
 
-msgid "ui.main_menu.score"
-msgstr "评分"
+msgid "ui.workshop.back"
+msgstr "返回"
 
+msgid "ui.workshop.slot.brain"
+msgstr "脑"
+
+msgid "ui.workshop.slot.ear"
+msgstr "耳朵"
+
+msgid "ui.workshop.slot.hand_l"
+msgstr "左手"
+
+msgid "ui.workshop.slot.hand_r"
+msgstr "右手"
+
+msgid "ui.workshop.slot.chest"
+msgstr "胸部"
+
+msgid "ui.workshop.slot.waist"
+msgstr "腰部"
+
+msgid "ui.workshop.slot.back"
+msgstr "背部"
+
+msgid "ui.workshop.slot.tail"
+msgstr "尾部"
+
+msgid "ui.workshop.slot.leg_l"
+msgstr "左腿"
+
+msgid "ui.workshop.slot.leg_r"
+msgstr "右腿"
+
+msgid "ui.workshop.slot.foot_l"
+msgstr "左脚"
+
+msgid "ui.workshop.slot.foot_r"
+msgstr "右脚"
+
+msgid "ui.part.spike_bracer"
+msgstr "尖刺护臂"
+
+msgid "ui.part.dodge_brain"
+msgstr "闪避脑"
+
+msgid "ui.warehouse.title"
+msgstr "图鉴"
+
+msgid "ui.warehouse.rarity"
+msgstr "稀有度："
+
+msgid "ui.warehouse.cost"
+msgstr "造价："
+
+msgid "ui.warehouse.slot"
+msgstr "部位："
+
+msgid "ui.warehouse.na"
+msgstr "—"
+
+msgid "ui.map.next"
+msgstr "下一步"
+
+msgid "ui.map.body.star"
+msgstr "恒星"
+
+msgid "ui.map.body.terrestrial"
+msgstr "类地行星"
+
+msgid "ui.map.body.no_atmosphere"
+msgstr "无大气行星"
+
+msgid "ui.map.body.lava"
+msgstr "熔岩行星"
+
+msgid "ui.map.body.sand"
+msgstr "荒漠行星"
+
+msgid "ui.map.body.ice"
+msgstr "冰封行星"
+
+msgid "ui.map.body.gaseous"
+msgstr "气态巨行星"
+
+msgid "ui.map.card.level.title"
+msgstr "关卡信息"
+
+msgid "ui.map.card.level.body"
+msgstr "难度 III ｜ 敌军 4 波"
+
+msgid "ui.map.card.boss.title"
+msgstr "BOSS信息"
+
+msgid "ui.map.card.boss.body"
+msgstr "铁颚兽 ｜ 弱点：背部散热口"
+
+msgid "ui.map.card.progress.title"
+msgstr "玩家进度"
+
+msgid "ui.map.card.progress.body"
+msgstr "已攻略 3 / 7 ｜ 最佳评级 A"
+
+
+msgid "ui.plan.title"
+msgstr "方案"
+
+msgid "ui.plan.new"
+msgstr "新建方案"
+
+msgid "ui.plan.save"
+msgstr "保存"
+
+msgid "ui.plan.save_title"
+msgstr "保存方案"
+
+msgid "ui.plan.name_label"
+msgstr "方案名称"
+
+msgid "ui.plan.confirm"
+msgstr "确定"
+
+msgid "ui.plan.cancel"
+msgstr "取消"
+
+msgid "ui.plan.name_empty"
+msgstr "请输入方案名称"
+
+msgid "ui.plan.save_failed"
+msgstr "保存失败，请重试"
+
+msgid "ui.plan.saved.body"
+msgstr "已保存的方案（装配内容还在做）"
+
+msgid "ui.warehouse.close"
+msgstr "关闭"
+
+msgid "ui.plan.card.assault.title"
+msgstr "方案 A ｜ 突击"
+
+msgid "ui.plan.card.assault.body"
+msgstr "优先近战部件，造价低，适合速推前两关。"
+
+msgid "ui.plan.card.heavy.title"
+msgstr "方案 B ｜ 重装"
+
+msgid "ui.plan.card.heavy.body"
+msgstr "高稀有度装甲，抗揍但慢，适合拖到最后。"
+
+msgid "ui.plan.card.ranged.title"
+msgstr "方案 C ｜ 远程"
+
+msgid "ui.plan.card.ranged.body"
+msgstr "手部带远程部件，站桩输出，注意保护躯干。"

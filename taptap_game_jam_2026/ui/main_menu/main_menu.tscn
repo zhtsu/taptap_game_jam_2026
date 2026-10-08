@@ -25,25 +25,8 @@ grow_horizontal = 2
 grow_vertical = 2
 script = ExtResource("1_menu")
 
-[node name="GalaxyViewport" type="SubViewportContainer" parent="." unique_id=105506599]
-layout_mode = 1
-anchors_preset = 15
-anchor_right = 1.0
-anchor_bottom = 1.0
-grow_horizontal = 2
-grow_vertical = 2
-mouse_filter = 2
-stretch = true
-
-[node name="SubViewport" type="SubViewport" parent="GalaxyViewport" unique_id=318173380]
-handle_input_locally = false
-size = Vector2i(1080, 2400)
-render_target_update_mode = 2
-
-[node name="GalaxyRoot" type="Node3D" parent="GalaxyViewport/SubViewport" unique_id=1837072080]
-unique_name_in_owner = true
-
 [node name="FloatingUI" type="Control" parent="." unique_id=548024384]
+unique_name_in_owner = true
 layout_mode = 1
 anchors_preset = 15
 anchor_right = 1.0
@@ -59,7 +42,7 @@ anchor_right = 1.0
 offset_left = 50.0
 offset_top = 50.0
 offset_right = -50.0
-offset_bottom = 160.0
+offset_bottom = 170.0
 grow_horizontal = 2
 mouse_filter = 2
 
@@ -69,12 +52,9 @@ size_flags_horizontal = 3
 mouse_filter = 2
 
 [node name="SettingsButton" type="Button" parent="FloatingUI/TopBar" unique_id=1154358632]
-custom_minimum_size = Vector2(220, 110)
+custom_minimum_size = Vector2(240, 120)
 layout_mode = 2
 mouse_default_cursor_shape = 2
-theme_override_colors/font_color = Color(0.941176, 0.333333, 0.415686, 1)
-theme_override_colors/font_pressed_color = Color(1, 0.505882, 0.564706, 1)
-theme_override_colors/font_hover_color = Color(1, 0.505882, 0.564706, 1)
 theme_override_font_sizes/font_size = 48
 theme_override_styles/normal = SubResource("StyleBoxFlat_cell")
 theme_override_styles/pressed = SubResource("StyleBoxFlat_cell_hover")
@@ -89,7 +69,7 @@ anchor_top = 1.0
 anchor_right = 1.0
 anchor_bottom = 1.0
 offset_left = 40.0
-offset_top = -784.0
+offset_top = -532.0
 offset_right = -40.0
 offset_bottom = -40.0
 grow_horizontal = 2
@@ -101,9 +81,6 @@ theme_override_constants/separation = 12
 custom_minimum_size = Vector2(0, 240)
 layout_mode = 2
 mouse_default_cursor_shape = 2
-theme_override_colors/font_color = Color(0.941176, 0.333333, 0.415686, 1)
-theme_override_colors/font_pressed_color = Color(1, 0.505882, 0.564706, 1)
-theme_override_colors/font_hover_color = Color(1, 0.505882, 0.564706, 1)
 theme_override_font_sizes/font_size = 48
 theme_override_styles/normal = SubResource("StyleBoxFlat_cell")
 theme_override_styles/pressed = SubResource("StyleBoxFlat_cell_hover")
@@ -123,29 +100,23 @@ layout_mode = 2
 mouse_filter = 2
 theme_override_constants/separation = 12
 
-[node name="WorkshopButton" type="Button" parent="FloatingUI/BottomStack/ButtonRows/RowTop" unique_id=401961599]
+[node name="PlanButton" type="Button" parent="FloatingUI/BottomStack/ButtonRows/RowTop" unique_id=401961599]
 custom_minimum_size = Vector2(0, 240)
 layout_mode = 2
 size_flags_horizontal = 3
 mouse_default_cursor_shape = 2
-theme_override_colors/font_color = Color(0.941176, 0.333333, 0.415686, 1)
-theme_override_colors/font_pressed_color = Color(1, 0.505882, 0.564706, 1)
-theme_override_colors/font_hover_color = Color(1, 0.505882, 0.564706, 1)
 theme_override_font_sizes/font_size = 48
 theme_override_styles/normal = SubResource("StyleBoxFlat_cell")
 theme_override_styles/pressed = SubResource("StyleBoxFlat_cell_hover")
 theme_override_styles/hover = SubResource("StyleBoxFlat_cell_hover")
 theme_override_styles/focus = SubResource("StyleBoxFlat_cell_hover")
-text = "ui.main_menu.workshop"
+text = "ui.main_menu.plan"
 
 [node name="WarehouseButton" type="Button" parent="FloatingUI/BottomStack/ButtonRows/RowTop" unique_id=1466101914]
 custom_minimum_size = Vector2(0, 240)
 layout_mode = 2
 size_flags_horizontal = 3
 mouse_default_cursor_shape = 2
-theme_override_colors/font_color = Color(0.941176, 0.333333, 0.415686, 1)
-theme_override_colors/font_pressed_color = Color(1, 0.505882, 0.564706, 1)
-theme_override_colors/font_hover_color = Color(1, 0.505882, 0.564706, 1)
 theme_override_font_sizes/font_size = 48
 theme_override_styles/normal = SubResource("StyleBoxFlat_cell")
 theme_override_styles/pressed = SubResource("StyleBoxFlat_cell_hover")
@@ -153,45 +124,7 @@ theme_override_styles/hover = SubResource("StyleBoxFlat_cell_hover")
 theme_override_styles/focus = SubResource("StyleBoxFlat_cell_hover")
 text = "ui.main_menu.warehouse"
 
-[node name="RowBottom" type="HBoxContainer" parent="FloatingUI/BottomStack/ButtonRows" unique_id=634111978]
-custom_minimum_size = Vector2(0, 240)
-layout_mode = 2
-mouse_filter = 2
-theme_override_constants/separation = 12
-
-[node name="MapButton" type="Button" parent="FloatingUI/BottomStack/ButtonRows/RowBottom" unique_id=1679843380]
-custom_minimum_size = Vector2(0, 240)
-layout_mode = 2
-size_flags_horizontal = 3
-mouse_default_cursor_shape = 2
-theme_override_colors/font_color = Color(0.941176, 0.333333, 0.415686, 1)
-theme_override_colors/font_pressed_color = Color(1, 0.505882, 0.564706, 1)
-theme_override_colors/font_hover_color = Color(1, 0.505882, 0.564706, 1)
-theme_override_font_sizes/font_size = 48
-theme_override_styles/normal = SubResource("StyleBoxFlat_cell")
-theme_override_styles/pressed = SubResource("StyleBoxFlat_cell_hover")
-theme_override_styles/hover = SubResource("StyleBoxFlat_cell_hover")
-theme_override_styles/focus = SubResource("StyleBoxFlat_cell_hover")
-text = "ui.main_menu.map"
-
-[node name="ScoreButton" type="Button" parent="FloatingUI/BottomStack/ButtonRows/RowBottom" unique_id=1373449494]
-custom_minimum_size = Vector2(0, 240)
-layout_mode = 2
-size_flags_horizontal = 3
-mouse_default_cursor_shape = 2
-theme_override_colors/font_color = Color(0.941176, 0.333333, 0.415686, 1)
-theme_override_colors/font_pressed_color = Color(1, 0.505882, 0.564706, 1)
-theme_override_colors/font_hover_color = Color(1, 0.505882, 0.564706, 1)
-theme_override_font_sizes/font_size = 48
-theme_override_styles/normal = SubResource("StyleBoxFlat_cell")
-theme_override_styles/pressed = SubResource("StyleBoxFlat_cell_hover")
-theme_override_styles/hover = SubResource("StyleBoxFlat_cell_hover")
-theme_override_styles/focus = SubResource("StyleBoxFlat_cell_hover")
-text = "ui.main_menu.score"
-
 [connection signal="pressed" from="FloatingUI/TopBar/SettingsButton" to="." method="_on_settings_pressed"]
 [connection signal="pressed" from="FloatingUI/BottomStack/StartButton" to="." method="_on_start_pressed"]
-[connection signal="pressed" from="FloatingUI/BottomStack/ButtonRows/RowTop/WorkshopButton" to="." method="_on_workshop_pressed"]
+[connection signal="pressed" from="FloatingUI/BottomStack/ButtonRows/RowTop/PlanButton" to="." method="_on_plan_pressed"]
 [connection signal="pressed" from="FloatingUI/BottomStack/ButtonRows/RowTop/WarehouseButton" to="." method="_on_warehouse_pressed"]
-[connection signal="pressed" from="FloatingUI/BottomStack/ButtonRows/RowBottom/MapButton" to="." method="_on_map_pressed"]
-[connection signal="pressed" from="FloatingUI/BottomStack/ButtonRows/RowBottom/ScoreButton" to="." method="_on_score_pressed"]

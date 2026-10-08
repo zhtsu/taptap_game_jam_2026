@@ -1,0 +1,23 @@
+[gd_resource type="Resource" script_class="PlanConfig" format=3]
+
+[ext_resource type="Script" path="res://data/types/plan_card.gd" id="1_card"]
+[ext_resource type="Script" path="res://data/types/plan_config.gd" id="2_plan"]
+
+[sub_resource type="Resource" id="Card_assault"]
+script = ExtResource("1_card")
+title_key = "ui.plan.card.assault.title"
+body_key = "ui.plan.card.assault.body"
+
+[sub_resource type="Resource" id="Card_heavy"]
+script = ExtResource("1_card")
+title_key = "ui.plan.card.heavy.title"
+body_key = "ui.plan.card.heavy.body"
+
+[sub_resource type="Resource" id="Card_ranged"]
+script = ExtResource("1_card")
+title_key = "ui.plan.card.ranged.title"
+body_key = "ui.plan.card.ranged.body"
+
+[resource]
+script = ExtResource("2_plan")
+cards = [SubResource("Card_assault"), SubResource("Card_heavy"), SubResource("Card_ranged")]

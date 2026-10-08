@@ -1,0 +1,51 @@
+[gd_scene load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://game/road/car.gd" id="1_car"]
+
+[node name="Car" type="Node2D"]
+script = ExtResource("1_car")
+
+[node name="Shadow" type="ColorRect" parent="."]
+unique_name_in_owner = true
+offset_left = -103.0
+offset_top = -190.0
+offset_right = 103.0
+offset_bottom = 240.0
+mouse_filter = 2
+color = Color(0, 0, 0, 0.32)
+
+[node name="Body" type="ColorRect" parent="."]
+unique_name_in_owner = true
+offset_left = -95.0
+offset_top = -210.0
+offset_right = 95.0
+offset_bottom = 210.0
+mouse_filter = 2
+color = Color(0.776471, 0.243137, 0.203922, 1)
+
+[node name="Roof" type="ColorRect" parent="."]
+unique_name_in_owner = true
+offset_left = -68.0
+offset_top = -143.0
+offset_right = 68.0
+offset_bottom = 25.0
+mouse_filter = 2
+color = Color(0.482353, 0.152941, 0.129412, 1)
+
+[node name="LightLeft" type="ColorRect" parent="."]
+unique_name_in_owner = true
+offset_left = -78.0
+offset_top = 164.0
+offset_right = -46.0
+offset_bottom = 200.0
+mouse_filter = 2
+color = Color(0.94902, 0.929412, 0.721569, 1)
+
+[node name="LightRight" type="ColorRect" parent="."]
+unique_name_in_owner = true
+offset_left = 46.0
+offset_top = 164.0
+offset_right = 78.0
+offset_bottom = 200.0
+mouse_filter = 2
+color = Color(0.94902, 0.929412, 0.721569, 1)

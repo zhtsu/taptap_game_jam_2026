@@ -12,7 +12,10 @@ extends Node
 ##
 ## 两类文件分开放：
 ##   options.sav（槽位 OptionsSave.SLOT）= 机器级设置，只有元数据 + options 段；
-##   其它槽位                          = 游戏进度，元数据 + 除 options 外的所有分段。
+##   plans.sav  （槽位 PlanSave.SLOT）  = 玩家保存的「方案」，只有元数据 + plans 段；
+##   其它槽位                            = 游戏进度，元数据 + 除上面两类分段外的所有分段。
+## 三者写哪些分段由 `_payload_for()` 一张表决定 —— 加分段时**必须**同时更新它，
+## 否则新分段会被写进每一类文件里（游戏档载入时还会把它覆盖回去）。
 ##
 ## 所有请求都进同一个任务队列按顺序执行，一次 drain 有上限，剩下的下一帧继续
 ## （避免监听者在结果事件里继续投任务造成同一帧死循环）。
@@ -37,6 +40,9 @@ const OptionsApplier: GDScript = preload(Paths.SCRIPT_OPTIONS_APPLIER)
 
 ## 一次 drain 最多执行多少个任务，剩下的下一帧继续
 const MAX_JOBS_PER_DRAIN: int = 16
+
+## **不是"一局游戏"的文件**：列存档时不列它们（设置档 / 方案档各有自己的生命周期）
+const GLOBAL_SLOTS: Array[String] = [OptionsSave.SLOT, PlanSave.SLOT]
 
 ## 唯一的存档数据对象（存档 = 序列化它）
 var save_data: SaveData = SaveData.new()
@@ -68,6 +74,7 @@ func _ready() -> void:
 	SaveData.current = save_data
 
 	_options_ready()
+	_plans_ready()
 
 
 func _exit_tree() -> void:
@@ -212,10 +219,10 @@ func _do_delete(request: Types.DeleteSaveRequest) -> void:
 	_emit(Events.DELETE_SAVE_FINISHED, _make_result(ok, request.slot, "" if ok else "删除失败"))
 
 
-## 列存档（不含设置档）
+## 列存档（不含设置档 / 方案档这类"不是一局游戏"的文件）
 func _do_save_list() -> void:
 	var saves: Array[Dictionary] = []
-	for slot in SaveStorage.list_slots(_save_dir, OptionsSave.SLOT):
+	for slot in SaveStorage.list_slots(_save_dir, GLOBAL_SLOTS):
 		var dict: Dictionary = SaveStorage.read(_save_dir, slot)
 		if dict.is_empty():
 			continue
@@ -245,14 +252,13 @@ func _options_ready() -> void:
 	_seed_options_from_engine()
 
 
-## 当前引擎状态 → 内存设置值（首次运行 / 设置档不可用时的兜底）
+## 当前引擎状态 → 内存设置值（首次运行 / 设置档不可用时的兜底）。
+## **只播种语言**：音量的默认值就是"满档"，不需要从引擎读回来
+##（分辨率已于 2026-10-07 从设置里删除，见 ENGINEERING_NOTES 028）。
 func _seed_options_from_engine() -> void:
 	save_data.options.language = TranslationServer.get_locale()
-	var window_size: Vector2i = DisplayServer.window_get_size()
-	if window_size.x > 0 and window_size.y > 0:
-		save_data.options.resolution = window_size
-	CoreSystem.logger.info("[SaveService] 以当前引擎状态作为设置默认值（%s / %s）"
-		% [save_data.options.resolution, save_data.options.language])
+	CoreSystem.logger.info("[SaveService] 以当前引擎状态作为设置默认值（语言=%s）"
+		% save_data.options.language)
 
 
 ## 启动时读设置存档并应用；返回是否成功载入
@@ -273,6 +279,31 @@ func _autoload_options() -> bool:
 	return true
 
 
+## 方案档的启动处理：有存档就**只把 plans 段读进来**，没有 / 读不了就保持空列表
+## （界面上就是"还没有保存过方案"）。
+##
+## 为什么不像 `_autoload_options()` 那样整份 `from_dict`：方案档里的 meta 是落盘时顺手写进去的，
+## 把它读回内存会覆盖"当前是哪一局游戏"的元数据（`SaveData.metadata()` 就会报错槽位）。
+## 分段属于哪个文件，只有这个服务知道 —— 所以"只取自己那一段"这件事必须在这里做。
+func _plans_ready() -> void:
+	if not FileAccess.file_exists(SaveStorage.path_for(_save_dir, PlanSave.SLOT)):
+		return
+
+	var dict: Dictionary = _prepare_load(SaveStorage.read(_save_dir, PlanSave.SLOT))
+	if dict.is_empty():
+		CoreSystem.logger.warning("[SaveService] 方案档无法载入，按没有保存过方案处理")
+		return
+
+	var plans_value: Variant = dict.get("plans", null)
+	if not (plans_value is Dictionary):
+		CoreSystem.logger.warning("[SaveService] 方案档里没有 plans 段，按没有保存过方案处理")
+		return
+
+	save_data.plans.from_dict(plans_value)
+	save_data.plans.validate()
+	CoreSystem.logger.info("[SaveService] 已读入 %d 条方案" % save_data.plans.plans.size())
+
+
 ## 把存档里的设置应用到引擎（具体动作在 options_applier.gd；这里只管救场与日志）
 func _apply_options() -> void:
 	var options: OptionsSave = save_data.options
@@ -283,24 +314,35 @@ func _apply_options() -> void:
 		options = save_data.options
 
 	OptionsApplier.apply(options)
-	CoreSystem.logger.info("[SaveService] 已应用设置：resolution=%s language=%s"
-		% [options.resolution, TranslationServer.get_locale()])
+	# 日志里只报"现在生效的设置项"（分辨率 / 按键重映射已于 2026-10-07 删除，
+	# 见 ENGINEERING_NOTES 028 —— 这里漏改就会在每次写设置档后抛
+	# "Invalid access to property 'resolution'"，而且报错会**中断本函数**）
+	CoreSystem.logger.info("[SaveService] 已应用设置：语言=%s 音量=%s/%s/%s"
+		% [TranslationServer.get_locale(), options.master_volume, options.music_volume,
+			options.sfx_volume])
 
 #endregion
 
 
 #region 内部实现
 
-## 要写进文件的字典（v2 起两类存档都是"version + meta + 各自的分段"）。
-## 设置档 = version + meta + options；其它槽位 = version + meta + 除 options 外的所有分段
-## （机器级设置不跟着游戏存档跑）。
+## 要写进文件的字典：**每个文件只写属于它的分段**（v2 起都是"version + meta + 各自的分段"）。
+##   - 设置档 = meta + options
+##   - 方案档 = meta + plans
+##   - 游戏档 = meta + 除上面两类以外的所有分段（机器级设置和方案不跟着某一局存档跑）
+## 为什么必须逐个 erase、不能只查一次：`to_dict()` 会把**所有**分段都吐出来，
+## 漏掉一个就会让游戏档里多出一份副本，载入游戏档时又把内存里的那份覆盖回旧值。
 func _payload_for(slot: String) -> Dictionary:
-	if slot == OptionsSave.SLOT:
-		return save_data.to_dict()
-
-	var game_payload: Dictionary = save_data.to_dict()
-	game_payload.erase("options")
-	return game_payload
+	var payload: Dictionary = save_data.to_dict()
+	match slot:
+		OptionsSave.SLOT:
+			payload.erase("plans")
+		PlanSave.SLOT:
+			payload.erase("options")
+		_:
+			payload.erase("options")
+			payload.erase("plans")
+	return payload
 
 
 ## 读出"可以载入的字典"；返回空 = 拒绝载入（文件不存在 / 版本比程序新 / 迁移失败）。

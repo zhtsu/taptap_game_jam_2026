@@ -1,0 +1,6 @@
+[gd_scene format=3]
+
+[ext_resource type="Script" path="res://data/parts/spike_bracer/spike_bracer.gd" id="1_spike"]
+
+[node name="SpikeBracer" type="Node"]
+script = ExtResource("1_spike")

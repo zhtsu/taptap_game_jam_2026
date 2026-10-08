@@ -1,0 +1,70 @@
+[gd_resource type="Resource" script_class="WorkshopLayout" format=3]
+
+[ext_resource type="Script" path="res://data/types/workshop_slot.gd" id="1_slot"]
+[ext_resource type="Script" path="res://data/types/workshop_layout.gd" id="2_layout"]
+
+[sub_resource type="Resource" id="Slot_brain"]
+script = ExtResource("1_slot")
+id = "brain"
+name_key = "ui.workshop.slot.brain"
+
+[sub_resource type="Resource" id="Slot_ear"]
+script = ExtResource("1_slot")
+id = "ear"
+name_key = "ui.workshop.slot.ear"
+
+[sub_resource type="Resource" id="Slot_hand_l"]
+script = ExtResource("1_slot")
+id = "hand_l"
+name_key = "ui.workshop.slot.hand_l"
+
+[sub_resource type="Resource" id="Slot_hand_r"]
+script = ExtResource("1_slot")
+id = "hand_r"
+name_key = "ui.workshop.slot.hand_r"
+
+[sub_resource type="Resource" id="Slot_chest"]
+script = ExtResource("1_slot")
+id = "chest"
+name_key = "ui.workshop.slot.chest"
+
+[sub_resource type="Resource" id="Slot_waist"]
+script = ExtResource("1_slot")
+id = "waist"
+name_key = "ui.workshop.slot.waist"
+
+[sub_resource type="Resource" id="Slot_back"]
+script = ExtResource("1_slot")
+id = "back"
+name_key = "ui.workshop.slot.back"
+
+[sub_resource type="Resource" id="Slot_tail"]
+script = ExtResource("1_slot")
+id = "tail"
+name_key = "ui.workshop.slot.tail"
+
+[sub_resource type="Resource" id="Slot_leg_l"]
+script = ExtResource("1_slot")
+id = "leg_l"
+name_key = "ui.workshop.slot.leg_l"
+
+[sub_resource type="Resource" id="Slot_leg_r"]
+script = ExtResource("1_slot")
+id = "leg_r"
+name_key = "ui.workshop.slot.leg_r"
+
+[sub_resource type="Resource" id="Slot_foot_l"]
+script = ExtResource("1_slot")
+id = "foot_l"
+name_key = "ui.workshop.slot.foot_l"
+
+[sub_resource type="Resource" id="Slot_foot_r"]
+script = ExtResource("1_slot")
+id = "foot_r"
+name_key = "ui.workshop.slot.foot_r"
+
+[resource]
+script = ExtResource("2_layout")
+columns = 4
+rows = 4
+slots = [SubResource("Slot_brain"), SubResource("Slot_ear"), SubResource("Slot_hand_l"), SubResource("Slot_hand_r"), SubResource("Slot_chest"), SubResource("Slot_waist"), SubResource("Slot_back"), SubResource("Slot_tail"), SubResource("Slot_leg_l"), SubResource("Slot_leg_r"), SubResource("Slot_foot_l"), SubResource("Slot_foot_r")]

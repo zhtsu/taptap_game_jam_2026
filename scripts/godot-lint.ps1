@@ -11,6 +11,7 @@
       ui_bypass       ui/ 下不得直接 instantiate() / queue_free()（界面生命周期交给 UiRoot）
       save_data_type  save_data/ 下分段字段不得使用 Object / Callable / Signal / RID 等类型
       locale          en.po / zh_CN.po / texts.pot 三处 msgid 集合必须完全一致
+      locale_missing  被引用的翻译 key 必须在语言文件里有定义（否则界面直接显示 key 原文）
 
     warn 级（存量或建议，不阻断）：
       scene_tree      长节点路径（$A/B 或 get_node("A/B")）易碎，新代码请用 %唯一名 或 @export
@@ -60,9 +61,17 @@ $pathsAllow = @('core/paths.gd')
 $eventsAllow = @('core/events.gd')
 $eventNames = @(
     'open_ui', 'close_ui',
-    'start_game', 'title_confirmed', 'open_main_menu', 'open_credits', 'return_to_title', 'pause_toggle',
+    'start_game', 'select_level', 'title_confirmed', 'open_main_menu', 'open_credits', 'return_to_title', 'pause_toggle',
     'save_request', 'load_request', 'delete_save_request', 'save_list_request',
-    'save_finished', 'load_finished', 'delete_save_finished', 'save_list_ready'
+    'save_finished', 'load_finished', 'delete_save_finished', 'save_list_ready',
+    # 部件钩子的感知事件（成对上报状态改变，见 core/events.gd）
+    'obstacle_ahead_entered', 'obstacle_ahead_exited',
+    'enemy_left_entered', 'enemy_left_exited',
+    'enemy_right_entered', 'enemy_right_exited',
+    # 部件 → 玩法的命令事件（换道请求）
+    'lane_move_request',
+    # 星系镜头控制（地图界面 → 主菜单转给星系）
+    'galaxy_focus', 'galaxy_reset'
 )
 $forbiddenTypes = @('Object', 'Node', 'NodePath', 'Resource', 'Callable', 'Signal', 'RID')
 $localeFiles = [ordered]@{
@@ -160,7 +169,10 @@ foreach ($f in (Get-ScanFiles -Dirs $scanDirs -Extensions @('.gd'))) {
 # 所以这里显式豁免（而不是把规则改松）。要新增豁免必须逐个写明理由。
 $uiBypassAllow = @(
     'ui/galaxy/galaxy.gd',      # 星系场景：自己生成 WorldEnvironment/Rings/星球
-    'ui/main_menu/main_menu.gd' # 主菜单：把星系实例化进自己的 SubViewport
+    'ui/galaxy/galaxy_background.gd', # 银河系背景层：实例化星系场景当常驻背景
+    'ui/main_menu/main_menu.gd', # 主菜单：把星系实例化进自己的 SubViewport
+    'ui/workshop/workshop.gd',  # 车间：实例化槽位组件（slot.tscn）铺进网格，不是打开独立界面
+    'ui/warehouse/warehouse.gd' # 仓库：同上，实例化槽位组件
 )
 foreach ($f in (Get-ScanFiles -Dirs @('ui') -Extensions @('.gd'))) {
     $rel = Get-RelPath $f.FullName
@@ -204,7 +216,35 @@ foreach ($id in $allIds) {
     }
 }
 
-$referenceBlob = (Get-ScanFiles -Dirs $scanDirs -Extensions @('.gd', '.tscn') |
+# 规则 5 只看"语言文件之间"是否同步，抓不到下面这种：**场景/脚本里用了一个
+# 谁都没定义的 key**（例如曾经的 ui.workshop.warehouse）。这种情况引擎**不报错**，
+# 界面直接把 key 原文当文案显示（"跑起来没报错"完全骗人），所以按 error 拦。
+# key 前缀不写死：从语言文件里现有的 key 取（当前只有 ui.*），
+# 以后加了别的命名空间会自动跟着查。
+$keyPrefixes = @($ids['en'] | ForEach-Object { ($_ -split '\.')[0] } | Sort-Object -Unique) |
+    Where-Object { $_ }
+$keyPattern = '"(' + (($keyPrefixes | ForEach-Object { [regex]::Escape($_) }) -join '|') + ')\.[A-Za-z0-9_.]+"'
+$knownIds = @{}
+foreach ($id in $ids['en']) { $knownIds[$id] = $true }
+foreach ($f in (Get-ScanFiles -Dirs $scanDirs -Extensions @('.gd', '.tscn', '.tres'))) {
+    $rel = Get-RelPath $f.FullName
+    $lines = Get-Content -LiteralPath $f.FullName -Encoding UTF8
+    for ($i = 0; $i -lt $lines.Count; $i++) {
+        if (Test-IsCommentLine $lines[$i]) { continue }
+        foreach ($m in [regex]::Matches($lines[$i], $keyPattern)) {
+            $key = $m.Value.Trim('"')
+            if (-not $knownIds.ContainsKey($key)) {
+                Add-Finding -Rule 'locale_missing' -Severity 'error' -File $rel -Line ($i + 1) -Snippet $key `
+                    -Message "key '$key' 被引用但没有定义（语言文件里没有这个 msgid）→ 界面上会直接显示 key 原文"
+            }
+        }
+    }
+}
+
+# 引用来源必须包含 .tres：翻译 key 可以写在配置资源里（例如
+# data/resources/workshop_layout.tres 的 name_key 字段）。只扫 .gd/.tscn 时
+# 这些 key 会被误判成 orphan。
+$referenceBlob = (Get-ScanFiles -Dirs $scanDirs -Extensions @('.gd', '.tscn', '.tres') |
     ForEach-Object { Get-Content -LiteralPath $_.FullName -Raw -Encoding UTF8 }) -join "`n"
 $orphans = @($ids['en'] | Where-Object { -not $referenceBlob.Contains($_) })
 foreach ($id in $orphans) {

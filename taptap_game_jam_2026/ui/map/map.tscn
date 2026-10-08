@@ -1,0 +1,135 @@
+[gd_scene format=3 uid="uid://f7exo3krn0xs"]
+
+[ext_resource type="Script" uid="uid://bd4snmhcsnttw" path="res://ui/map/map.gd" id="1_map"]
+
+[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_map_back"]
+content_margin_left = 12.0
+content_margin_top = 12.0
+content_margin_right = 12.0
+content_margin_bottom = 12.0
+bg_color = Color(0.0705882, 0.0705882, 0.0784314, 1)
+
+[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_map_back_hover"]
+content_margin_left = 12.0
+content_margin_top = 12.0
+content_margin_right = 12.0
+content_margin_bottom = 12.0
+bg_color = Color(0.109804, 0.109804, 0.121569, 1)
+
+[node name="Map" type="Control" unique_id=602647446]
+layout_mode = 3
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+script = ExtResource("1_map")
+
+[node name="TopBar" type="HBoxContainer" parent="." unique_id=1894373603]
+layout_mode = 1
+anchors_preset = 10
+anchor_right = 1.0
+offset_left = 50.0
+offset_top = 50.0
+offset_right = -50.0
+offset_bottom = 170.0
+grow_horizontal = 2
+
+[node name="BackButton" type="Button" parent="TopBar" unique_id=724670098]
+unique_name_in_owner = true
+custom_minimum_size = Vector2(240, 120)
+layout_mode = 2
+mouse_default_cursor_shape = 2
+theme_override_font_sizes/font_size = 48
+theme_override_styles/normal = SubResource("StyleBoxFlat_map_back")
+theme_override_styles/pressed = SubResource("StyleBoxFlat_map_back_hover")
+theme_override_styles/hover = SubResource("StyleBoxFlat_map_back_hover")
+theme_override_styles/focus = SubResource("StyleBoxFlat_map_back_hover")
+text = "ui.workshop.back"
+
+[node name="Spacer" type="Control" parent="TopBar" unique_id=1576925550]
+layout_mode = 2
+size_flags_horizontal = 3
+mouse_filter = 2
+
+[node name="NextButton" type="Button" parent="TopBar" unique_id=1923575399]
+unique_name_in_owner = true
+custom_minimum_size = Vector2(240, 120)
+layout_mode = 2
+mouse_default_cursor_shape = 2
+theme_override_font_sizes/font_size = 48
+theme_override_styles/normal = SubResource("StyleBoxFlat_map_back")
+theme_override_styles/pressed = SubResource("StyleBoxFlat_map_back_hover")
+theme_override_styles/hover = SubResource("StyleBoxFlat_map_back_hover")
+theme_override_styles/focus = SubResource("StyleBoxFlat_map_back_hover")
+text = "ui.map.next"
+
+[node name="CardArea" type="MarginContainer" parent="." unique_id=48426846]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+mouse_filter = 2
+theme_override_constants/margin_left = 50
+theme_override_constants/margin_top = 200
+theme_override_constants/margin_right = 50
+theme_override_constants/margin_bottom = 60
+
+[node name="Column" type="VBoxContainer" parent="CardArea" unique_id=1309572364]
+layout_mode = 2
+mouse_filter = 2
+theme_override_constants/separation = 20
+
+[node name="Spacer" type="Control" parent="CardArea/Column" unique_id=2015790104]
+layout_mode = 2
+size_flags_vertical = 3
+mouse_filter = 2
+
+[node name="Switcher" type="HBoxContainer" parent="CardArea/Column" unique_id=274800359]
+layout_mode = 2
+theme_override_constants/separation = 24
+
+[node name="PrevPlanetButton" type="Button" parent="CardArea/Column/Switcher" unique_id=2139788699]
+unique_name_in_owner = true
+custom_minimum_size = Vector2(160, 160)
+layout_mode = 2
+mouse_default_cursor_shape = 2
+theme_override_font_sizes/font_size = 72
+theme_override_styles/normal = SubResource("StyleBoxFlat_map_back")
+theme_override_styles/pressed = SubResource("StyleBoxFlat_map_back_hover")
+theme_override_styles/hover = SubResource("StyleBoxFlat_map_back_hover")
+theme_override_styles/focus = SubResource("StyleBoxFlat_map_back_hover")
+text = "<"
+
+[node name="MapName" type="Label" parent="CardArea/Column/Switcher" unique_id=483052929]
+unique_name_in_owner = true
+custom_minimum_size = Vector2(560, 160)
+layout_mode = 2
+size_flags_horizontal = 3
+theme_override_font_sizes/font_size = 64
+horizontal_alignment = 1
+vertical_alignment = 1
+
+[node name="NextPlanetButton" type="Button" parent="CardArea/Column/Switcher" unique_id=1691136080]
+custom_minimum_size = Vector2(160, 160)
+layout_mode = 2
+mouse_default_cursor_shape = 2
+theme_override_font_sizes/font_size = 72
+theme_override_styles/normal = SubResource("StyleBoxFlat_map_back")
+theme_override_styles/pressed = SubResource("StyleBoxFlat_map_back_hover")
+theme_override_styles/hover = SubResource("StyleBoxFlat_map_back_hover")
+theme_override_styles/focus = SubResource("StyleBoxFlat_map_back_hover")
+text = ">"
+
+[node name="CardList" type="VBoxContainer" parent="CardArea/Column" unique_id=131655036]
+unique_name_in_owner = true
+layout_mode = 2
+mouse_filter = 2
+theme_override_constants/separation = 20
+
+[connection signal="pressed" from="TopBar/BackButton" to="." method="_on_back_pressed"]
+[connection signal="pressed" from="TopBar/NextButton" to="." method="_on_next_step_pressed"]
+[connection signal="pressed" from="CardArea/Column/Switcher/PrevPlanetButton" to="." method="_on_prev_pressed"]
+[connection signal="pressed" from="CardArea/Column/Switcher/NextPlanetButton" to="." method="_on_next_pressed"]

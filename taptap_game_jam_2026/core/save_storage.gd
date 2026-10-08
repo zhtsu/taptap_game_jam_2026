@@ -38,8 +38,9 @@ static func path_for(save_dir: String, slot: String) -> String:
 	return save_dir.path_join(slot + SAVE_EXTENSION)
 
 
-## 列出存档目录里所有槽位 ID（不含设置档，也不含 .tmp 残留 —— .tmp 不以 .sav 结尾）
-static func list_slots(save_dir: String, excluded_slot: String) -> Array[String]:
+## 列出存档目录里所有槽位 ID（不含 `excluded_slots` 里的槽位 —— 设置档 / 方案档不是"一局游戏"，
+## 也自动不含 .tmp 残留：.tmp 不以 .sav 结尾）
+static func list_slots(save_dir: String, excluded_slots: Array) -> Array[String]:
 	var slots: Array[String] = []
 	if not DirAccess.dir_exists_absolute(save_dir):
 		return slots
@@ -48,7 +49,7 @@ static func list_slots(save_dir: String, excluded_slot: String) -> Array[String]
 		if not file_name.ends_with(SAVE_EXTENSION):
 			continue
 		var slot: String = file_name.trim_suffix(SAVE_EXTENSION)
-		if slot == excluded_slot:
+		if excluded_slots.has(slot):
 			continue
 		slots.append(slot)
 	slots.sort()

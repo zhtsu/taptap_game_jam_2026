@@ -28,6 +28,18 @@ const ACTION_PAUSE: String = "pause"
 ## 转场时长（秒）
 const FADE_DURATION: float = 0.25
 
+## **常驻的银河系背景层**（entry/main.tscn 里的 `GalaxyBackground`）的路径。
+##
+## 为什么要由流程层切它的显隐：它是个 `CanvasLayer(-1)`，而 CanvasLayer 画在**根视口的 3D 之上**
+## —— 也就是说它会盖住关卡自己的 3D 画面（"layer = -1" 只表示在所有 UI 之下，不代表在 3D 之下）。
+## 主菜单 / 地图界面要它当背景，关卡不要它。**谁主张进关卡，谁负责恢复**：
+## 关 = 进关卡前，开 = 回主菜单/标题时 —— 和主菜单 `set_ui_visible()` 是同一套思路。
+##
+## 为什么导出的是 **NodePath** 而不是 `@export var x: CanvasLayer`：后者在 `.tscn` 里同样存成
+## `NodePath(...)`，但**实测不会被解析成节点引用**（赋值被静默忽略、引擎一行报错都没有），
+## 症状是"背景层没被藏起来、3D 关卡被整屏盖住"。自己 `get_node_or_null()` 才可靠。
+@export var galaxy_layer_path: NodePath
+
 ## 关卡场景的挂载点（entry/main.tscn 里的节点，用场景唯一名引用）
 @onready var _scene_root: Node = %SceneRoot
 ## 转场遮罩矩形（entry/main.tscn 里的 GameFlow/TransitionLayer/FadeRect）
@@ -41,6 +53,14 @@ var _current_level: Node = null
 var _main_menu_open: bool = false
 ## 转场动画期间为 true，用来挡住重复的切换请求
 var _switching: bool = false
+## **本局要打的那一关**（地图界面选定、制造界面开打）。
+##
+## 为什么状态放在流程层：地图只负责"选"，制造只负责"装配完点开始"，
+## 两边都不持有对方的界面引用；这一处流程状态就是它们之间的交接点（`Events.SELECT_LEVEL` 写入）。
+## 空 = 还没选过（这时 `START_GAME` 传空路径会明确报错，而不是闷声进错关卡）。
+var _selected_level: String = ""
+## "找不到背景层"的告警只打一次（`_set_galaxy_visible` 每次进关卡都会调）
+var _warned_missing_galaxy: bool = false
 
 
 func _ready() -> void:
@@ -51,6 +71,7 @@ func _ready() -> void:
 	_bus = CoreSystem.event_bus
 	_bus.subscribe_unique_script(Events.TITLE_CONFIRMED, _on_title_confirmed)
 	_bus.subscribe_unique_script(Events.OPEN_MAIN_MENU, _on_open_main_menu)
+	_bus.subscribe_unique_script(Events.SELECT_LEVEL, _on_select_level)
 	_bus.subscribe_unique_script(Events.START_GAME, _on_start_game)
 	_bus.subscribe_unique_script(Events.RETURN_TO_TITLE, _on_return_to_title)
 	_bus.subscribe_unique_script(Events.PAUSE_TOGGLE, _on_pause_toggle)
@@ -61,6 +82,7 @@ func _exit_tree() -> void:
 		return
 	_bus.unsubscribe(Events.TITLE_CONFIRMED, _on_title_confirmed)
 	_bus.unsubscribe(Events.OPEN_MAIN_MENU, _on_open_main_menu)
+	_bus.unsubscribe(Events.SELECT_LEVEL, _on_select_level)
 	_bus.unsubscribe(Events.START_GAME, _on_start_game)
 	_bus.unsubscribe(Events.RETURN_TO_TITLE, _on_return_to_title)
 	_bus.unsubscribe(Events.PAUSE_TOGGLE, _on_pause_toggle)
@@ -119,27 +141,50 @@ func _on_options_credits() -> void:
 	_open_ui(Paths.UI_CREDITS, Types.UiLayer.MIDDLE)
 
 
+## 地图界面选定了要打哪一关：先记下来，等制造界面装配完再 `START_GAME`。
+## payload 是关卡场景路径（空路径会被忽略并告警）。
+func _on_select_level(level_path: String) -> void:
+	if level_path.is_empty():
+		CoreSystem.logger.warning("[GameFlow] 选关事件带了空路径，忽略")
+		return
+	_selected_level = level_path
+	CoreSystem.logger.info("[GameFlow] 已选定关卡：%s" % level_path)
+
+
 ## 开始游戏：关主菜单 → 淡黑 → 换关卡 → 淡回
+##
+## `level_path` 可以是**空字符串**：那表示"打刚才选定的那一关"
+## （地图界面发 `SELECT_LEVEL` 记下来的，见 `_selected_level`）。
+## 两者都空时明确报错，不会静默进到某个默认关卡。
 func _on_start_game(level_path: String) -> void:
 	if _switching:
 		return
+	var target: String = level_path if not level_path.is_empty() else _selected_level
+	if target.is_empty():
+		CoreSystem.logger.error("[GameFlow] 既没给关卡路径、也没有已选定的关卡，无法开始")
+		return
 	_switching = true
-	CoreSystem.event_bus.push_event(Events.CLOSE_UI, Paths.UI_MAIN_MENU)
-	_main_menu_open = false
+	# 主菜单可能本来就不在场（关卡里点「重新开始」也是走 START_GAME）—— 那就别去关它，
+	# 否则 UiRoot 会打一条"UI 未打开"的告警，看起来像出了问题
+	if _main_menu_open:
+		CoreSystem.event_bus.push_event(Events.CLOSE_UI, Paths.UI_MAIN_MENU)
+		_main_menu_open = false
 
 	await _fade_out()
+	# 黑屏之后再切背景层：否则玩家会看到"背景突然消失"（fade 已经把画面盖住了）
+	_set_galaxy_visible(false)
 	_free_current_level()
 
-	var packed: PackedScene = CoreSystem.resource_manager.load_resource(level_path) as PackedScene
+	var packed: PackedScene = CoreSystem.resource_manager.load_resource(target) as PackedScene
 	if packed == null:
-		CoreSystem.logger.error("[GameFlow] 无法加载关卡场景: %s" % level_path)
+		CoreSystem.logger.error("[GameFlow] 无法加载关卡场景: %s" % target)
 		await _fade_in()
 		_switching = false
 		return
 
 	_current_level = packed.instantiate()
 	_scene_root.add_child(_current_level)
-	CoreSystem.logger.info("[GameFlow] 进入关卡: %s" % level_path)
+	CoreSystem.logger.info("[GameFlow] 进入关卡: %s" % target)
 	await _fade_in()
 	_switching = false
 
@@ -156,6 +201,8 @@ func _on_return_to_title() -> void:
 
 	await _fade_out()
 	_free_current_level()
+	# 回主菜单要把银河系背景层显回来（进关卡时藏起来了）
+	_set_galaxy_visible(true)
 
 	var request: Types.OpenUiRequest = Types.OpenUiRequest.new()
 	request.path = Paths.UI_MAIN_MENU
@@ -224,5 +271,30 @@ func _free_current_level() -> void:
 		return
 	_current_level.queue_free()
 	_current_level = null
+
+
+## 银河系背景层的显隐（进关卡藏、回主菜单显）。
+##
+## 为什么放在这里而不是让背景层自己监听 `START_GAME`：进关卡/离开关卡是**流程**，
+## 权威是流程层；背景层不需要知道"什么时候算在关卡里"。
+func _set_galaxy_visible(shown: bool) -> void:
+	var layer: CanvasLayer = _galaxy_layer()
+	if layer == null:
+		if not galaxy_layer_path.is_empty() and not _warned_missing_galaxy:
+			_warned_missing_galaxy = true
+			CoreSystem.logger.warning("[GameFlow] 找不到银河系背景层：%s（3D 关卡会被它盖住）"
+				% galaxy_layer_path)
+		return
+	if layer.visible == shown:
+		return
+	layer.visible = shown
+	CoreSystem.logger.info("[GameFlow] 银河系背景层 → %s" % ("显示" if shown else "隐藏"))
+
+
+## 按 NodePath 解析背景层节点（没配 / 找不到 = null，流程照常跑）
+func _galaxy_layer() -> CanvasLayer:
+	if galaxy_layer_path.is_empty():
+		return null
+	return get_node_or_null(galaxy_layer_path) as CanvasLayer
 
 #endregion

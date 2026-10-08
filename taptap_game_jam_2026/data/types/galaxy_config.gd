@@ -62,6 +62,43 @@ extends Resource
 ## 视野角度（越大看到的范围越广）
 @export_range(20.0, 110.0) var camera_fov: float = 55.0
 
+## 单颗特写（地图界面用）**进入**时，镜头从当前位置漫游到特写位的时长（秒）。
+## **0 = 立即锁定**（默认）：进地图的第一帧镜头就已经在特写位、天体在正中，
+## 没有过渡；想恢复"漫游过去"的观感就填 1.2 之类。
+## 进入特写的漫游**不走 Tween**（Tween 会和"每帧跟随"抢同一个 `global_position`，
+## 见 ENGINEERING_NOTES 016），这里只是插值权重的分母。
+## 调用方（地图界面）通过 `Events.GALAXY_FOCUS` 的第二个参数把实际时长传进来，
+## 所以这个字段是"进地图"那一档的值。
+@export_range(0.0, 20.0) var focus_duration: float = 0.0
+
+## **在地图里切到另一颗天体**（上半屏「< 名称 >」按钮）时的漫游时长（秒）。
+## 和 `focus_duration` 分开：进地图要"立刻对上"，切地图要"看得见镜头飞过去"。
+@export_range(0.0, 20.0) var switch_duration: float = 1.2
+
+## 单颗特写**退出**（返回主菜单）时，镜头归位的时长（秒）。
+## 进入是硬切 / 切换是漫游，退出要"平滑飞回去"。
+@export_range(0.0, 20.0) var reset_duration: float = 1.2
+
+## 特写时把天体**在画面上抬高**多少（屏幕高的比例）。0 = 正中，0.15 = 上移 15%。
+##
+## 做法：相机位置不动（所以**屏幕上大小不变**），只把"看向的点"从天体中心往下挪。
+## 往下挪的**世界距离**按 `相机到天体的距离` 换算（见 `_apply_focus_camera`），
+## 所以不管天体离多远，抬高的**像素数恒定**（实测 1080x2400 视口下
+## 0.10 ≈ 220px、0.15 ≈ 325px、0.20 ≈ 430px；不同天体因镜头俯角不同会差 ±10px）。
+##
+## 为什么要抬高：地图上半屏留给星球特写、下半屏是切换行 + 三张信息卡片，
+## 抬高后星球落在上半屏的空档里，不会贴着下面的内容。
+@export_range(0.0, 0.4) var focus_screen_raise: float = 0.20
+
+## 单颗特写时，**相机相对天体的固定偏移长度 = 天体半径 × 这个倍数**（必须 > 1，否则相机进球体里）。
+##
+## 特写期间相机每帧被摆到"天体 + 这个偏移"处（跟随公转），所以：
+##   - 天体永远在画面正中 → 尺寸不受"离轴放大"影响；
+##   - 相机到天体的距离恒定 → **屏幕大小只由这个倍数决定**，与天体实际大小无关。
+##
+## 换算（屏幕直径占屏高比例）：倍数 4.5 → 约 43%；3 → 约 64%；6 → 约 32%。
+@export_range(1.2, 20.0) var focus_distance_factor: float = 4.5
+
 @export_group("轨道线")
 ## 给每条轨道画一条发光圆环
 @export var orbit_lines_enabled: bool = true
@@ -96,26 +133,28 @@ extends Resource
 @export var star_color: Color = Color(1.0, 0.97, 0.92)
 
 
-## 建一份默认配置：1 颗中央恒星 + 9 颗行星（覆盖插件全部 6 种行星场景）。
+## 建一份默认配置：1 颗中央恒星 + 6 颗行星（**正好对应插件里的 7 个场景**）。
 ## 用途：新建配置文件、或运行时找不到配置时的兜底。
 ##
-## scale 的取值依据（插件各场景的基准半径 → 目标视觉半径）：
-##   恒星 865 → x0.48 ≈415（中央主星，明显大于行星）
-##   类地 220 → x0.75 ≈165   冰 220 → x0.75 ≈165   沙 200 → x0.70 ≈140
-##   熔岩 270 → x0.60 ≈162   气态 0.5 → x300 ≈150  无大气 0.5 → x280 ≈140
+## **必须和 `data/resources/galaxy.tres` 保持一致**：这是兜底路径，
+## 这里的星球表如果比配置多/少，缺配置时看到的就是另一个星系（ENGINEERING_NOTES 017）。
+##
+## scale 的取值依据（插件各场景的**基准半径** → 目标视觉半径）：
+##   恒星 1080 → x0.48 ≈518   类地 200 → x0.75 =150   无大气 200 → x0.80 =160
+##   熔岩 189 → x0.60 ≈113    沙 196 → x0.70 ≈137    冰 197 → x0.75 ≈148
+##   气态 800 → x0.25 =200
+## **不要**照抄插件场景里的烘焙 transform（恒星 ×1200、气态 ×800 等），
+## 那些是被反向补偿掉的，照抄会让星球尺度差几个数量级（ENGINEERING_NOTES 010）。
 static func build_default() -> GalaxyConfig:
 	var cfg := GalaxyConfig.new()
 	cfg.bodies = [
 		_body("恒星", Paths.PLANET_STAR, 0.48, 2.0, 0.0),
 		_body("类地", Paths.PLANET_TERRESTRIAL, 0.75, 10.0, 4.0),
-		_body("无大气", Paths.PLANET_NO_ATMOSPHERE, 280.0, 14.0, 4.0),
-		_body("熔岩", Paths.PLANET_LAVA, 0.60, 12.0, -6.0),
-		_body("沙", Paths.PLANET_SAND, 0.70, 8.0, -6.0),
+		_body("无大气", Paths.PLANET_NO_ATMOSPHERE, 0.8, 14.0, 4.0),
+		_body("熔岩", Paths.PLANET_LAVA, 0.6, 12.0, -6.0),
+		_body("沙", Paths.PLANET_SAND, 0.7, 8.0, -6.0),
 		_body("冰", Paths.PLANET_ICE, 0.75, 9.0, 7.0),
-		_body("气态", Paths.PLANET_GASEOUS, 300.0, 7.0, 7.0),
-		_body("冰", Paths.PLANET_ICE, 0.75, 9.0, 9.0),
-		_body("气态", Paths.PLANET_GASEOUS, 300.0, 7.0, 9.0),
-		_body("类地", Paths.PLANET_TERRESTRIAL, 0.75, 10.0, 11.0),
+		_body("气态", Paths.PLANET_GASEOUS, 0.25, 7.0, 7.0),
 	]
 	return cfg
 

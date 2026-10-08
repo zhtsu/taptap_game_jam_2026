@@ -18,12 +18,6 @@ msgstr "Tap anywhere to start"
 msgid "ui.main_menu.start"
 msgstr "Start"
 
-msgid "ui.options.resolution"
-msgstr "Resolution"
-
-msgid "ui.options.fullscreen"
-msgstr "Fullscreen"
-
 msgid "ui.options.language"
 msgstr "Language"
 
@@ -46,7 +40,22 @@ msgid "ui.credits.back"
 msgstr "Back"
 
 msgid "ui.game.hint"
-msgstr "Example level - press ESC to pause"
+msgstr "The orc acts on its own, driven by its parts - equip a brain that dodges"
+
+msgid "ui.game.distance"
+msgstr "%d m"
+
+msgid "ui.game.fail_title"
+msgstr "Crashed"
+
+msgid "ui.game.fail_body"
+msgstr "You made it %d m"
+
+msgid "ui.game.restart"
+msgstr "Restart"
+
+msgid "ui.game.back_menu"
+msgstr "Main Menu"
 
 msgid "ui.options.master_volume"
 msgstr "Master volume"
@@ -57,30 +66,171 @@ msgstr "Music volume"
 msgid "ui.options.sfx_volume"
 msgstr "Sound volume"
 
-msgid "ui.options.pause_key"
-msgstr "Pause key"
-
-msgid "ui.options.reset_key"
-msgstr "Reset"
-
-msgid "ui.options.waiting_key"
-msgstr "Press a key..."
-
 msgid "ui.options.back"
 msgstr "Back"
 
 msgid "ui.main_menu.settings"
 msgstr "Settings"
 
-msgid "ui.main_menu.workshop"
-msgstr "Workshop"
+msgid "ui.main_menu.plan"
+msgstr "Plan"
 
 msgid "ui.main_menu.warehouse"
-msgstr "Warehouse"
+msgstr "Codex"
 
-msgid "ui.main_menu.map"
-msgstr "Map"
+msgid "ui.workshop.start"
+msgstr "Start"
 
-msgid "ui.main_menu.score"
-msgstr "Scores"
+msgid "ui.workshop.back"
+msgstr "Back"
 
+msgid "ui.workshop.slot.brain"
+msgstr "Brain"
+
+msgid "ui.workshop.slot.ear"
+msgstr "Ears"
+
+msgid "ui.workshop.slot.hand_l"
+msgstr "Left hand"
+
+msgid "ui.workshop.slot.hand_r"
+msgstr "Right hand"
+
+msgid "ui.workshop.slot.chest"
+msgstr "Chest"
+
+msgid "ui.workshop.slot.waist"
+msgstr "Waist"
+
+msgid "ui.workshop.slot.back"
+msgstr "Back"
+
+msgid "ui.workshop.slot.tail"
+msgstr "Tail"
+
+msgid "ui.workshop.slot.leg_l"
+msgstr "Left leg"
+
+msgid "ui.workshop.slot.leg_r"
+msgstr "Right leg"
+
+msgid "ui.workshop.slot.foot_l"
+msgstr "Left foot"
+
+msgid "ui.workshop.slot.foot_r"
+msgstr "Right foot"
+
+msgid "ui.part.spike_bracer"
+msgstr "Spike Bracer"
+
+msgid "ui.part.dodge_brain"
+msgstr "Dodge Brain"
+
+msgid "ui.warehouse.title"
+msgstr "Codex"
+
+msgid "ui.warehouse.rarity"
+msgstr "Rarity: "
+
+msgid "ui.warehouse.cost"
+msgstr "Cost: "
+
+msgid "ui.warehouse.slot"
+msgstr "Slot: "
+
+msgid "ui.warehouse.na"
+msgstr "—"
+
+msgid "ui.map.next"
+msgstr "Next"
+
+msgid "ui.map.body.star"
+msgstr "Star"
+
+msgid "ui.map.body.terrestrial"
+msgstr "Terrestrial planet"
+
+msgid "ui.map.body.no_atmosphere"
+msgstr "Airless planet"
+
+msgid "ui.map.body.lava"
+msgstr "Lava planet"
+
+msgid "ui.map.body.sand"
+msgstr "Desert planet"
+
+msgid "ui.map.body.ice"
+msgstr "Ice planet"
+
+msgid "ui.map.body.gaseous"
+msgstr "Gas giant"
+
+msgid "ui.map.card.level.title"
+msgstr "Level info"
+
+msgid "ui.map.card.level.body"
+msgstr "Threat III | 4 enemy waves"
+
+msgid "ui.map.card.boss.title"
+msgstr "Boss info"
+
+msgid "ui.map.card.boss.body"
+msgstr "Ironjaw | Weak point: back vent"
+
+msgid "ui.map.card.progress.title"
+msgstr "Progress"
+
+msgid "ui.map.card.progress.body"
+msgstr "3 / 7 planets cleared | Best rank A"
+
+
+msgid "ui.plan.title"
+msgstr "Plan"
+
+msgid "ui.plan.new"
+msgstr "New Plan"
+
+msgid "ui.plan.save"
+msgstr "Save"
+
+msgid "ui.plan.save_title"
+msgstr "Save Plan"
+
+msgid "ui.plan.name_label"
+msgstr "Plan name"
+
+msgid "ui.plan.confirm"
+msgstr "OK"
+
+msgid "ui.plan.cancel"
+msgstr "Cancel"
+
+msgid "ui.plan.name_empty"
+msgstr "Enter a plan name"
+
+msgid "ui.plan.save_failed"
+msgstr "Save failed, please try again"
+
+msgid "ui.plan.saved.body"
+msgstr "Saved plan (assembly is still work in progress)"
+
+msgid "ui.warehouse.close"
+msgstr "Close"
+
+msgid "ui.plan.card.assault.title"
+msgstr "Plan A | Assault"
+
+msgid "ui.plan.card.assault.body"
+msgstr "Melee parts first, low cost, good for rushing the first two levels."
+
+msgid "ui.plan.card.heavy.title"
+msgstr "Plan B | Heavy"
+
+msgid "ui.plan.card.heavy.body"
+msgstr "High-rarity armour: tanky but slow, good for dragging the fight out."
+
+msgid "ui.plan.card.ranged.title"
+msgstr "Plan C | Ranged"
+
+msgid "ui.plan.card.ranged.body"
+msgstr "Ranged parts in the hands, damage from a standstill; protect the torso."

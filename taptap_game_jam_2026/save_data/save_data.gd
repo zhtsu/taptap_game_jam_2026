@@ -26,15 +26,22 @@ static var current: SaveData = null
 ##          旧档在 migrate() 里补齐默认值，**可继续读取**，不需要拒绝。
 ##   3 → 4（**兼容**）：options 段新增按键重映射表（input_bindings，动作名 → 物理键码）。
 ##          旧档补一个空表，界面上就显示默认按键。
-var version: int = 4
+##   4 → 5（**兼容**）：新增 plans 段（玩家保存的「方案」列表，单独占 plans.sav）。
+##          旧档补一个空列表，界面上就是"还没保存过方案"。
+##   5 → 6（**兼容**）：options 段**删掉** resolution 与 input_bindings（设置界面只剩语言 + 三路音量，
+##          见 ENGINEERING_NOTES 028）。旧档把这两个键丢掉即可继续读。
+var version: int = 6
 
 # ===== 分段：加一行就多一块存档内容 =====
 
 ## 元数据（槽位 ID、保存时间、当时游戏版本、累计游戏时长；前三个由 SaveService 自动填）
 var meta: MetaSave = MetaSave.new()
 
-## 设置界面选中的项（分辨率 / 语言）；候选列表在 core/options_data.gd
+## 设置界面的选中项（**只有语言 + 三路音量**）；候选列表在 core/options_data.gd
 var options: OptionsSave = OptionsSave.new()
+
+## 玩家保存的「方案」（跨局复用，单独占 plans.sav；写哪些分段见 core/save_service.gd）
+var plans: PlanSave = PlanSave.new()
 
 
 ## 只取元数据，给存档列表用。
@@ -52,12 +59,14 @@ func metadata() -> Dictionary:
 ## 旧档迁移钩子：载入的存档 version 低于当前 version 时会先调用它。
 ## 返回空字典 = 拒绝载入这个存档。
 ##
-## 现存的三条规则：
+## 现存的五条规则：
 ##   - v1 → v2：**显式拒绝**。v1 的元数据还平铺在根上，没有 meta 段；模板尚未发布、
 ##     不存在真实用户存档，所以当时选择了拒绝而不是写迁移（一次性决定，见 version 的注释）。
 ##   - v2 → v3：**写迁移**。options 段新增三个音量字段，旧档补齐默认值即可继续读。
 ##   - v3 → v4：**写迁移**。options 段新增按键重映射表（input_bindings），旧档补空表。
-## 以后的结构变更 MUST 走 v2 → v3 / v3 → v4 这种"按 from_version 逐级补齐字段"的路子，
+##   - v4 → v5：**写迁移**。新增 plans 段（方案列表），旧档补空列表。
+##   - v5 → v6：**写迁移**。options 段**删字段**（resolution / input_bindings），旧档丢掉即可。
+## 以后的结构变更 MUST 走 v2 → v3 这种"按 from_version 逐级处理"的路子，
 ## MUST NOT 再整体拒绝一整个版本。
 func migrate(dict: Dictionary, from_version: int) -> Dictionary:
 	if from_version >= version:
@@ -87,11 +96,29 @@ func migrate(dict: Dictionary, from_version: int) -> Dictionary:
 				if not options_dict.has("sfx_volume"):
 					options_dict["sfx_volume"] = OptionsSave.DEFAULT_VOLUME
 
-			# v3 → v4：按键重映射表（空表 = 全用 project.godot 的默认绑定）
+			# v3 → v4：按键重映射表（空表 = 全用 project.godot 的默认绑定）。
+			# 注：v6 起这个字段又被删掉了（设置界面不再提供重映射），这里照样补齐 ——
+			# 迁移是按版本逐级走的，每一步的落盘形状要和"当时那一版"一致，下一段再删掉它。
 			if not options_dict.has("input_bindings"):
 				options_dict["input_bindings"] = {}
 
 			migrated["options"] = options_dict
+
+	# v4 → v5：新增 plans 段（玩家保存的方案列表）。
+	# 同样显式补齐，让"迁移后的落盘字段完整"这件事本身可被断言。
+	if from_version < 5 and not migrated.has("plans"):
+		migrated["plans"] = {"plans": []}
+
+	# v5 → v6：options 段删掉分辨率与按键重映射（设置界面只剩语言 + 三路音量）。
+	# 删字段也要走迁移：留着它们的话，`from_dict` 会当"未知字段"警告，
+	# 而且旧档里那份值会被当成仍然生效的设置（ENGINEERING_NOTES 028）。
+	if from_version < 6:
+		var options_v6: Variant = migrated.get("options", null)
+		if options_v6 is Dictionary:
+			var options_dict_v6: Dictionary = options_v6
+			options_dict_v6.erase("resolution")
+			options_dict_v6.erase("input_bindings")
+			migrated["options"] = options_dict_v6
 
 	migrated["version"] = version
 	return migrated

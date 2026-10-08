@@ -1,0 +1,6 @@
+[gd_scene format=3 uid="uid://bmirrehrs8ua6"]
+
+[ext_resource type="Script" uid="uid://qbfirsvvgadl" path="res://data/parts/dodge_brain/dodge_brain.gd" id="1_brain"]
+
+[node name="DodgeBrain" type="Node" unique_id=39542828]
+script = ExtResource("1_brain")

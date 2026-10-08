@@ -8,8 +8,11 @@ extends RefCounted
 ##   - 设置项以后增加时改这里，调用方不需要动
 ##
 ## 项目特有的部分就是这里；core/ 的其它地方 SHOULD NOT 直接调 DisplayServer / TranslationServer。
+##
+## **只管两样：语言 + 三路音量**。分辨率与按键重映射已于 2026-10-07 删除
+## （见 ENGINEERING_NOTES 028：删设置项必须连"应用"这一步一起删，否则会留下隐形设置）。
 
-## 应用设置：音量 + 语言 + 分辨率（含全屏）
+## 应用设置：音量 + 语言
 static func apply(options: OptionsSave) -> void:
 	if options == null:
 		return
@@ -23,16 +26,6 @@ static func apply(options: OptionsSave) -> void:
 	if TranslationServer.get_locale() != options.language:
 		TranslationServer.set_locale(options.language)
 
-	# 按键重映射
-	_apply_input_bindings(options.input_bindings)
-
-	# 分辨率：OptionsData.FULLSCREEN（Vector2i.ZERO）代表全屏
-	if options.resolution == OptionsData.FULLSCREEN:
-		DisplayServer.window_set_mode(DisplayServer.WINDOW_MODE_FULLSCREEN)
-	else:
-		DisplayServer.window_set_mode(DisplayServer.WINDOW_MODE_WINDOWED)
-		DisplayServer.window_set_size(options.resolution)
-
 
 ## 线性音量 0.0~1.0 → 总线分贝。0.0 直接给 -80dB（等价静音；linear_to_db(0) 是 -inf，不能直接喂）。
 static func _apply_bus_volume(bus_name: String, linear: float) -> void:
@@ -43,50 +36,3 @@ static func _apply_bus_volume(bus_name: String, linear: float) -> void:
 
 	var clamped: float = clampf(linear, 0.0, 1.0)
 	AudioServer.set_bus_volume_db(index, linear_to_db(clamped) if clamped > 0.0 else -80.0)
-
-
-## 动作的"出厂绑定"备份：第一次套用重映射之前抓一份，供 Cancel 回滚 / 恢复默认使用。
-## static var：整个进程里只抓一次（每次启动重新抓，正好对应 project.godot 的当前内容）。
-static var _default_bindings: Dictionary = {}
-
-
-## 把重映射套到 InputMap 上。
-## 语义是**幂等**的：先把所有"可重映射动作"恢复成出厂绑定，再套用存档里的覆盖 ——
-## 所以"取消改动"或"恢复默认"只要把 input_bindings 改掉再应用一次就够了。
-static func _apply_input_bindings(bindings: Dictionary) -> void:
-	for entry in OptionsData.REMAPPABLE_ACTIONS:
-		var action: StringName = StringName(entry["action"])
-		_restore_default_binding(action)
-
-	for action_name in bindings:
-		var action: StringName = StringName(action_name)
-		if not InputMap.has_action(action):
-			push_warning("[OptionsApplier] 存档里有未知动作 '%s'，已忽略（检查 OptionsData.REMAPPABLE_ACTIONS）"
-				% action_name)
-			continue
-
-		var keycode: int = int(bindings[action_name])
-		if keycode <= 0:
-			continue
-
-		InputMap.action_erase_events(action)
-		var event: InputEventKey = InputEventKey.new()
-		# 用物理键码：同一个物理键在不同键盘布局下位置一致，玩家按的还是那个键。
-		# `as Key` 不能省：physical_keycode 的静态类型是 Key 枚举，而存档里取出来的是 int
-		# （var_to_bytes 只存变体类型、不存枚举，读回来必然是 int），
-		# 不转型会报 INT_AS_ENUM_WITHOUT_CAST。
-		event.physical_keycode = keycode as Key
-		InputMap.action_add_event(action, event)
-
-
-static func _ensure_default_bindings(action: StringName) -> void:
-	if _default_bindings.has(action):
-		return
-	_default_bindings[action] = InputMap.action_get_events(action).duplicate()
-
-
-static func _restore_default_binding(action: StringName) -> void:
-	_ensure_default_bindings(action)
-	InputMap.action_erase_events(action)
-	for event in _default_bindings[action]:
-		InputMap.action_add_event(action, event)

@@ -61,6 +61,28 @@ var _spin_targets: Array[Node3D] = []
 var _camera: Camera3D = null
 ## 生成时登记的摆放信息（轨道半径 / 角度 / 估算半径），供"轨道线留缺口"用
 var _placed: Array[_Placed] = []
+## 轨道节点（与 `_placed` 同下标：`_placed[0]` 是恒星，之后依次对应 `_orbits[0..]`）
+var _orbits: Array[Node3D] = []
+## 天体 holder 节点（与 `_placed` 同下标，用于"只看某颗"时按颗显隐）
+var _holders: Array[Node3D] = []
+## 轨道线：`{轨道下标: [该轨道的所有弧段节点]}`。一条轨道可能被切成多段弧，
+## 所以按轨道分组存 —— "只看某颗"时要把同一轨道整条一起隐藏/恢复。
+var _orbit_lines: Dictionary = {}
+## 是否处于"单颗特写"状态（特写期间每帧让相机看向目标）
+var _focus_target: Node3D = null
+## 特写时"相机相对天体"的偏移（特写期间恒定 --- 相机跟着天体走，屏幕尺寸就固定）
+var _focus_offset: Vector3 = Vector3.ZERO
+## 进入特写那一刻"相机相对天体"的偏移（漫游的起点；`focus_duration = 0` 时用不到）
+var _focus_rel_from: Vector3 = Vector3.ZERO
+## 进入特写后过了多少秒（自己数，不用 Tween —— 见 `_apply_focus_camera` 的注释）
+var _focus_elapsed: float = 0.0
+## 本次特写的漫游时长（秒，0 = 立即锁定）。由调用方给（进地图 0 / 切地图 1.2），
+## 不由星系配置决定 —— 同一颗天体在不同时机要不一样的手感。
+var _focus_duration: float = 0.0
+## 相机归位用的初始参数（进入特写前存下来，退出时恢复）
+var _saved_camera: Dictionary = {}
+## 相机归位动画（**只用于退出特写**；进入特写不再用 Tween）
+var _camera_tween: Tween = null
 
 
 ## 一个天体的摆放信息。运行时用的普通类，不参与序列化
@@ -95,6 +117,10 @@ func rebuild() -> void:
 	_orbit_speeds.clear()
 	_spin_targets.clear()
 	_placed.clear()
+	_orbits.clear()
+	_holders.clear()
+	_orbit_lines.clear()
+	_focus_target = null
 	_camera = null
 	_build_all()
 
@@ -253,7 +279,8 @@ func _build_bodies() -> void:
 	# 1) 中央恒星（数组第一项）
 	var star_entry: GalaxyBody = _config.bodies[0]
 	if star_entry != null and not star_entry.scene.is_empty():
-		_spawn_body(bodies_root, star_entry, "Center", Vector3.ZERO, star_entry.spin_speed)
+		var star_holder: Node3D = _spawn_body(bodies_root, star_entry, "Center", Vector3.ZERO, star_entry.spin_speed)
+		_holders.append(star_holder)
 		# 恒星也要登记：它半径大，内侧的轨道线得从它前面绕开
 		var star_info := _Placed.new()
 		star_info.orbit_radius = 0.0
@@ -267,18 +294,19 @@ func _build_bodies() -> void:
 	#    半径**按星球尺寸累加**算出来（见 _plan_orbits），这样任何公转角度下
 	#    相邻两圈的星球都不会互相叠住 —— 写死间距做不到这点。
 	var plans: Array[_OrbitPlan] = _plan_orbits()
-	var orbits: Array[Node3D] = []
 	for i in plans.size():
 		var orbit := Node3D.new()
 		orbit.name = "Orbit%d" % i
 		bodies_root.add_child(orbit)
-		orbits.append(orbit)
+		_orbits.append(orbit)
 	for i in plans.size():
 		for body: GalaxyBody in plans[i].bodies:
-			_add_body_to_orbit(orbits[i], i, body, plans[i].radius)
+			_add_body_to_orbit(_orbits[i], i, body, plans[i].radius)
 
 	# 3) 轨道线：画在 bodies_root（不公转的父节点）上，避免线跟着转。
 	#    半径直接用规划好的值（不依赖自转节点当帧的位置）。
+	#    每条线可能被切成多段弧（见 _add_orbit_line），所以按"轨道下标"分组存起来，
+	#    这样"只看某一颗"时能把别的轨道整条隐藏。
 	for i in plans.size():
 		_add_orbit_line(bodies_root, i, plans[i].radius)
 
@@ -365,7 +393,8 @@ func _add_body_to_orbit(orbit: Node3D, orbit_index: int, body: GalaxyBody, radiu
 	var angle: float = deg_to_rad(angle_deg)
 	var pos := Vector3(cos(angle) * radius, body.height, sin(angle) * radius)
 	var holder_name: String = "%s_%d" % [body.label if not body.label.is_empty() else "Body", orbit_index]
-	_spawn_body(orbit, body, holder_name, pos, body.spin_speed)
+	var holder: Node3D = _spawn_body(orbit, body, holder_name, pos, body.spin_speed)
+	_holders.append(holder)
 	# 按天体自己的公转速度决定整圈的转速（同轨多颗时取第一颗的）
 	if not _orbit_speeds.has(orbit):
 		_orbit_speeds[orbit] = body.orbit_speed
@@ -377,15 +406,16 @@ func _add_body_to_orbit(orbit: Node3D, orbit_index: int, body: GalaxyBody, radiu
 	_placed.append(info)
 
 
-## 实例化一个天体到 parent 的 pos 位置，并登记自转
-func _spawn_body(parent: Node3D, body: GalaxyBody, holder_name: String, pos: Vector3, spin: float) -> void:
+## 实例化一个天体到 parent 的 pos 位置，并登记自转。
+## 返回 holder 节点（失败时 null）—— 调用方要拿它登记，供"只看某颗"按颗显隐。
+func _spawn_body(parent: Node3D, body: GalaxyBody, holder_name: String, pos: Vector3, spin: float) -> Node3D:
 	if not ResourceLoader.exists(body.scene):
 		push_warning("[Galaxy] 天体场景不存在，已跳过：%s" % body.scene)
-		return
+		return null
 	var packed: PackedScene = load(body.scene) as PackedScene
 	if packed == null:
 		push_warning("[Galaxy] 天体场景加载失败：%s" % body.scene)
-		return
+		return null
 
 	var holder := Node3D.new()
 	holder.name = holder_name
@@ -396,11 +426,12 @@ func _spawn_body(parent: Node3D, body: GalaxyBody, holder_name: String, pos: Vec
 	var node: Node3D = packed.instantiate() as Node3D
 	if node == null:
 		push_warning("[Galaxy] 天体场景的根不是 Node3D：%s" % body.scene)
-		return
+		return null
 	node.name = "Model"
 	holder.add_child(node)
 	holder.set_meta("spin_speed", spin)
 	_spin_targets.append(holder)
+	return holder
 
 
 ## 轨道线在世界里的宽度（直接用 `orbit_line_width` 的世界单位值）。
@@ -442,6 +473,10 @@ func _add_orbit_line(parent: Node3D, line_index: int, radius: float) -> void:
 		line.cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_OFF
 		line.position.y = 0.0
 		parent.add_child(line)
+		# 登记：一条轨道可能有多段弧，"只看某颗"时要把同一轨道的所有段一起隐藏
+		if not _orbit_lines.has(line_index):
+			_orbit_lines[line_index] = []
+		(_orbit_lines[line_index] as Array).append(line)
 
 
 ## 算出某条轨道线上可以画的角度区段（弧度对 [起, 止]）。
@@ -579,3 +614,169 @@ func _process(delta: float) -> void:
 		var spin: Variant = holder.get_meta("spin_speed", null)
 		if spin != null:
 			holder.rotate_y(deg_to_rad(float(spin) * delta))
+	# 特写期间每帧把相机摆到"天体 + 固定偏移"，并看向天体。
+	#
+	# 为什么必须每帧摆位：天体在**公转**，位置一直在动；相机若只算一次绝对位置就会跟丢。
+	# 保持"相对天体的偏移"不变，于是：
+	#   ① 天体永远在画面正中（`look_at`）→ 不会有时偏左时偏右；
+	#   ② 相机到天体的距离恒定 = 偏移长度 → **屏幕上的大小就固定**，与天体大小无关。
+	if _focus_target != null and is_instance_valid(_focus_target):
+		_focus_elapsed += delta
+		_apply_focus_camera()
+
+
+## 把相机摆到特写位：位置 = 天体位置 + 当前该用的相对偏移，朝向 = 看向天体。
+##
+## **特写相机的唯一写入者**就是这里（`_process` 每帧调一次 + 进入特写时立刻调一次）。
+## 为什么不再用 `create_tween()` 做"漫游过去"：Tween 和"每帧跟随"写的是同一个
+## `global_position`，同一帧里谁后写谁赢 —— 实测表现是**瞬移到位 → 卡住不动约 1.2 秒
+## （这段时间天体照常公转、在画面里漂到一边）→ 再猛地跳回来**，
+## 看上去就是"进地图后要等两秒镜头才对准星球"（ENGINEERING_NOTES 016）。
+## 改成一个写入者之后，镜头每帧都在天体正中，不再有漂移和回跳。
+##
+## `focus_duration > 0` 时这里顺便负责"从当前位置漫游到特写位"：
+## 起点是**进入瞬间相机相对天体的偏移**（`_focus_rel_from`），
+## 这样漫游过程中天体也始终在画面正中，只是距离由远及近。
+##
+## （"正中"指相对**看向的点**而言；`focus_screen_raise` 会把看向的点往下挪，
+## 于是天体整体在画面上抬高 —— 位置不动，只改朝向，所以屏幕尺寸不受影响。）
+func _apply_focus_camera() -> void:
+	if _camera == null or _focus_target == null or not is_instance_valid(_focus_target):
+		return
+	var duration: float = maxf(_focus_duration, 0.0)
+	var weight: float = 1.0
+	if duration > 0.0:
+		weight = _ease_cubic_in_out(clampf(_focus_elapsed / duration, 0.0, 1.0))
+	var rel: Vector3 = _focus_rel_from.lerp(_focus_offset, weight)
+	_camera.global_position = _focus_target.global_position + rel
+	_camera.look_at(_focus_target.global_position + _focus_aim_offset(rel.length()), Vector3.UP)
+
+
+## 特写"看向的点"相对天体中心的偏移（世界向量）。
+##
+## 抬高量要按**距离**换算成世界距离，屏幕上的偏移才是恒定的：
+## 距离 d 处，视口半高 = `d x tan(fov/2)`；想要屏幕高的 `raise` 倍，
+## 世界距离就是 `raise x 2 x d x tan(fov/2)`。
+## 朝向是**世界下方** —— 看向天体下方 = 天体出现在画面中心**上方**。
+func _focus_aim_offset(distance: float) -> Vector3:
+	var raise: float = maxf(_config.focus_screen_raise, 0.0)
+	if raise <= 0.0:
+		return Vector3.ZERO
+	var half_fov: float = deg_to_rad(maxf(_camera.fov, 1.0)) * 0.5
+	return Vector3.DOWN * (raise * 2.0 * maxf(distance, 0.0) * tan(half_fov))
+
+
+## 与 Tween 的 `TRANS_CUBIC` + `EASE_IN_OUT` 同形的缓动（0→0，1→1，两端慢中间快）。
+## 自己写是因为漫游不再走 Tween（见 `_apply_focus_camera`），要自己算插值权重。
+func _ease_cubic_in_out(t: float) -> float:
+	if t < 0.5:
+		return 4.0 * t * t * t
+	var rest: float = -2.0 * t + 2.0
+	return 1.0 - rest * rest * rest / 2.0
+
+
+# --- 单颗特写（地图界面用）----------------------------------------------
+
+## 只看某一颗天体：隐藏**其它所有天体**和**全部轨道线**，镜头切到它的特写。
+##
+## `body_index` 是 `bodies` 数组的下标（0 = 中央恒星）。
+## `duration` 是这次镜头的漫游时长（秒）：**0 = 立即锁定**（进地图用），
+## > 0 = 从这里开始一段"漫游"到特写位（在地图里切天体用）——
+## 漫游期间天体**全程在画面正中**，只是距离由远及近。
+## 返回是否成功（下标越界 / 该天体没生成出来时返回 false）。
+##
+## **自转与公转都会继续**：这里不动 `_orbit_speeds` / `_spin_targets`，
+## 只改显隐与相机。这是有意为之 —— 特写要能看到星球在转。
+## 星球位置每帧在变，所以镜头靠 `_process` 里每帧 `look_at` 跟住它。
+##
+## 特写时**轨道线全隐藏**（不是"只留目标那条"）：特写的主体是星球本身，
+## 一条穿过画面的大圆环只会碍事。
+func focus_on_body(body_index: int, duration: float = 0.0) -> bool:
+	if body_index < 0 or body_index >= _holders.size():
+		CoreSystem.logger.warning("[Galaxy] 特写下标越界：%d" % body_index)
+		return false
+	var target: Node3D = _holders[body_index]
+	if target == null or not is_instance_valid(target):
+		CoreSystem.logger.warning("[Galaxy] 特写目标天体不存在：下标 %d" % body_index)
+		return false
+	if _camera == null:
+		return false
+
+	# 1) 记下当前相机状态，退出特写时原样恢复
+	if _saved_camera.is_empty():
+		_saved_camera = {
+			"position": _camera.global_position,
+			"rotation": _camera.global_rotation,
+		}
+
+	# 2) 显隐：只留目标那颗，轨道线全隐藏
+	for i in _holders.size():
+		var h: Node3D = _holders[i]
+		if h != null and is_instance_valid(h):
+			h.visible = (i == body_index)
+	for orbit_index: int in _orbit_lines:
+		for seg: Node3D in _orbit_lines[orbit_index]:
+			if is_instance_valid(seg):
+				seg.visible = false
+
+	# 3) 相机：记下"相对天体的偏移方向"，之后每帧跟着天体走。
+	#    方向取当前镜头方向（镜头从这个方向逼近 → 天体正面朝着观众，
+	#    不会因为换到背面看而"过去之后一片黑"），
+	#    长度 = 天体半径 × 倍数（倍数固定 → 屏幕上大小固定）。
+	var radius: float = _placed[body_index].est_radius if body_index < _placed.size() else 100.0
+	# 可见半径系数：自动估算是**网格半径**，实际可见尺寸因星球而异
+	# （带大气壳的大、裸球小）。
+	var body_def: GalaxyBody = _config.bodies[body_index] if body_index < _config.bodies.size() else null
+	if body_def != null:
+		radius *= maxf(body_def.focus_radius_scale, 0.01)
+
+	var dir: Vector3 = _camera.global_position - target.global_position
+	if dir.length() < 0.001:
+		dir = Vector3(0.0, 0.3, 1.0)
+	_focus_offset = dir.normalized() * (maxf(radius, 1.0) * maxf(_config.focus_distance_factor, 1.2))
+	# 漫游起点 = 进入瞬间"相机相对天体"的偏移（不是绝对位置：天体在动，
+	# 存绝对位置会让漫游路径跟着天体跑偏）。
+	_focus_rel_from = _camera.global_position - target.global_position
+	_focus_target = target
+	_focus_elapsed = 0.0
+	_focus_duration = maxf(duration, 0.0)
+	# 跟随靠 `_process` —— 确保它是开着的（本节点默认就开，这里只是显式声明依赖，
+	# 免得以后有人为了省开销把它关掉、结果特写不跟随了）
+	set_process(true)
+
+	# 退出特写的归位 Tween 可能还在跑（快速开关地图），它会写同一个 `global_position`，
+	# 必须先杀掉，否则又要变成"两个写入者抢属性"。
+	if _camera_tween != null and _camera_tween.is_valid():
+		_camera_tween.kill()
+	# 立刻摆一次（不等下一帧）：否则"进地图"的第一帧渲染的还是全景。
+	# `duration = 0` 时这一步就是最终位置 —— 镜头**当场锁定**，没有过渡。
+	_apply_focus_camera()
+	CoreSystem.logger.info("[Galaxy] 特写天体下标 %d：半径 %.0f（含系数），镜头相对偏移 %.0f（= %.1f 倍半径），漫游时长 %.2fs" % [
+		body_index, radius, _focus_offset.length(),
+		_focus_offset.length() / maxf(radius, 0.0001), _focus_duration])
+	return true
+
+
+## 退出特写：恢复所有天体与轨道线的显隐，相机动画回到进入特写前的位置与朝向。
+func reset_focus() -> void:
+	_focus_target = null
+	for h: Node3D in _holders:
+		if h != null and is_instance_valid(h):
+			h.visible = true
+	for orbit_index: int in _orbit_lines:
+		for seg: Node3D in _orbit_lines[orbit_index]:
+			if is_instance_valid(seg):
+				seg.visible = true
+
+	if _camera == null or _saved_camera.is_empty():
+		return
+	var pos: Vector3 = _saved_camera["position"]
+	var rot: Vector3 = _saved_camera["rotation"]
+	_saved_camera.clear()
+	if _camera_tween != null and _camera_tween.is_valid():
+		_camera_tween.kill()
+	_camera_tween = create_tween()
+	_camera_tween.set_trans(Tween.TRANS_CUBIC).set_ease(Tween.EASE_IN_OUT)
+	_camera_tween.tween_property(_camera, "global_position", pos, _config.reset_duration)
+	_camera_tween.parallel().tween_property(_camera, "global_rotation", rot, _config.reset_duration)
+	CoreSystem.logger.info("[Galaxy] 退出特写，相机归位")
